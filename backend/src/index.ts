@@ -59,7 +59,7 @@ app.get('/academies', async (req: Request, res: Response): Promise<void> => {
     res.json(academies);
   } catch (error) {
     console.error('Error fetching academies:', error);
-    res.status(500).json({ error: 'Failed to fetch academies', details: error.message });
+    res.status(500).json({ error: 'Failed to fetch academies', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 

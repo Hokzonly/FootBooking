@@ -7,12 +7,14 @@ const __dirname = path.dirname(__filename);
 
 console.log('Starting backend...');
 console.log('Current directory:', process.cwd());
+console.log('Environment variables:', Object.keys(process.env).filter(key => key.includes('DATABASE') || key.includes('JWT') || key.includes('MAILER')));
 
 const backendPath = path.join(__dirname, 'backend');
 console.log('Backend path:', backendPath);
 
 // Pass all environment variables to child processes
 const env = { ...process.env };
+console.log('Environment variables being passed to backend:', Object.keys(env).filter(key => key.includes('DATABASE') || key.includes('JWT') || key.includes('MAILER')));
 
 // First, install dependencies
 console.log('Installing backend dependencies...');
