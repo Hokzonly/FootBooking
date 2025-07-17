@@ -22,7 +22,17 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://foot-booking.vercel.app',
+    'https://foot-booking-esbfq20a8-hokzs-projects.vercel.app',
+    'https://foot-booking-gv4nhcrs1-hokzs-projects.vercel.app',
+    'https://foot-booking-p7vr4zbgk-hokzs-projects.vercel.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 app.get('/', (req: Request, res: Response): void => {
