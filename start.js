@@ -11,41 +11,62 @@ console.log('Current directory:', process.cwd());
 const backendPath = path.join(__dirname, 'backend');
 console.log('Backend path:', backendPath);
 
-// First, build the backend
-console.log('Building backend...');
-const buildChild = spawn('npm', ['run', 'build'], {
+// First, install dependencies
+console.log('Installing backend dependencies...');
+const installChild = spawn('npm', ['install'], {
   cwd: backendPath,
   stdio: 'inherit',
   shell: true
 });
 
-buildChild.on('error', (error) => {
-  console.error('Failed to build backend:', error);
+installChild.on('error', (error) => {
+  console.error('Failed to install dependencies:', error);
   process.exit(1);
 });
 
-buildChild.on('exit', (code) => {
+installChild.on('exit', (code) => {
   if (code !== 0) {
-    console.error('Build failed with code:', code);
+    console.error('Install failed with code:', code);
     process.exit(code);
   }
   
-  console.log('Build successful, starting backend...');
+  console.log('Dependencies installed, building backend...');
   
-  // Now start the backend
-  const startChild = spawn('npm', ['start'], {
+  // Then, build the backend
+  const buildChild = spawn('npm', ['run', 'build'], {
     cwd: backendPath,
     stdio: 'inherit',
     shell: true
   });
 
-  startChild.on('error', (error) => {
-    console.error('Failed to start backend:', error);
+  buildChild.on('error', (error) => {
+    console.error('Failed to build backend:', error);
     process.exit(1);
   });
 
-  startChild.on('exit', (code) => {
-    console.log('Backend exited with code:', code);
-    process.exit(code);
+  buildChild.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('Build failed with code:', code);
+      process.exit(code);
+    }
+    
+    console.log('Build successful, starting backend...');
+    
+    // Finally, start the backend
+    const startChild = spawn('npm', ['start'], {
+      cwd: backendPath,
+      stdio: 'inherit',
+      shell: true
+    });
+
+    startChild.on('error', (error) => {
+      console.error('Failed to start backend:', error);
+      process.exit(1);
+    });
+
+    startChild.on('exit', (code) => {
+      console.log('Backend exited with code:', code);
+      process.exit(code);
+    });
   });
 }); 
