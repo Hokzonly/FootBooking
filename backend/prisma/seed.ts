@@ -33,8 +33,8 @@ async function main() {
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[2], academyId: footacademy.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[3], academyId: footacademy.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[4], academyId: footacademy.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[0], academyId: footacademy.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[1], academyId: footacademy.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[0], academyId: footacademy.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[1], academyId: footacademy.id } });
 
   // Create kickoff academy
   console.log('seeding kickoff academy..')
@@ -54,8 +54,8 @@ async function main() {
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[2], academyId: kickoff.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[3], academyId: kickoff.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[4], academyId: kickoff.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[0], academyId: kickoff.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[1], academyId: kickoff.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[0], academyId: kickoff.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[1], academyId: kickoff.id } });
 
   // Create palmarena
   console.log('seeding palmarena..')
@@ -75,8 +75,8 @@ async function main() {
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[2], academyId: palmarena.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[3], academyId: palmarena.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[4], academyId: palmarena.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[0], academyId: palmarena.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[1], academyId: palmarena.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[0], academyId: palmarena.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[1], academyId: palmarena.id } });
 
   // Create masterfoot
   console.log('seeding masterfoot..')
@@ -96,8 +96,8 @@ async function main() {
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[2], academyId: masterfoot.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[3], academyId: masterfoot.id } });
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[4], academyId: masterfoot.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[0], academyId: masterfoot.id } });
-  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 500, image: images[1], academyId: masterfoot.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[0], academyId: masterfoot.id } });
+  await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[1], academyId: masterfoot.id } });
 }
 
 main()

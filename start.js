@@ -99,45 +99,69 @@ installChild.on('exit', (code) => {
       return;
     }
     
-    console.log('Database migrations completed, building backend...');
+    console.log('Database migrations completed, seeding database...');
     
-    // Then, build the backend
-    const buildChild = spawn('npm', ['run', 'build'], {
+    // Then, seed the database
+    const seedChild = spawn('npm', ['run', 'seed'], {
       cwd: backendPath,
       stdio: 'inherit',
       shell: true,
       env
     });
 
-    buildChild.on('error', (error) => {
-      console.error('Failed to build backend:', error);
+    seedChild.on('error', (error) => {
+      console.error('Failed to seed database:', error);
       process.exit(1);
     });
 
-    buildChild.on('exit', (code) => {
+    seedChild.on('exit', (code) => {
       if (code !== 0) {
-        console.error('Build failed with code:', code);
-        process.exit(code);
+        console.error('Seed failed with code:', code);
+        console.log('Continuing with build anyway...');
+      } else {
+        console.log('Database seeded successfully');
       }
       
-      console.log('Build successful, starting backend...');
+      console.log('Building backend...');
       
-      // Finally, start the backend
-      const startChild = spawn('npm', ['start'], {
+      // Then, build the backend
+      const buildChild = spawn('npm', ['run', 'build'], {
         cwd: backendPath,
         stdio: 'inherit',
         shell: true,
         env
       });
 
-      startChild.on('error', (error) => {
-        console.error('Failed to start backend:', error);
+      buildChild.on('error', (error) => {
+        console.error('Failed to build backend:', error);
         process.exit(1);
       });
 
-      startChild.on('exit', (code) => {
-        console.log('Backend exited with code:', code);
-        process.exit(code);
+      buildChild.on('exit', (code) => {
+        if (code !== 0) {
+          console.error('Build failed with code:', code);
+          process.exit(code);
+        }
+        
+        console.log('Build successful, starting backend...');
+        
+        // Finally, start the backend
+        const startChild = spawn('npm', ['start'], {
+          cwd: backendPath,
+          stdio: 'inherit',
+          shell: true,
+          env
+        });
+
+        startChild.on('error', (error) => {
+          console.error('Failed to start backend:', error);
+          process.exit(1);
+        });
+
+        startChild.on('exit', (code) => {
+          console.log('Backend exited with code:', code);
+          process.exit(code);
+        });
       });
     });
   });
