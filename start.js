@@ -30,43 +30,64 @@ installChild.on('exit', (code) => {
     process.exit(code);
   }
   
-  console.log('Dependencies installed, building backend...');
+  console.log('Dependencies installed, setting up database...');
   
-  // Then, build the backend
-  const buildChild = spawn('npm', ['run', 'build'], {
+  // Then, run database migrations
+  const migrateChild = spawn('npx', ['prisma', 'migrate', 'deploy'], {
     cwd: backendPath,
     stdio: 'inherit',
     shell: true
   });
 
-  buildChild.on('error', (error) => {
-    console.error('Failed to build backend:', error);
+  migrateChild.on('error', (error) => {
+    console.error('Failed to run migrations:', error);
     process.exit(1);
   });
 
-  buildChild.on('exit', (code) => {
+  migrateChild.on('exit', (code) => {
     if (code !== 0) {
-      console.error('Build failed with code:', code);
+      console.error('Migration failed with code:', code);
       process.exit(code);
     }
     
-    console.log('Build successful, starting backend...');
+    console.log('Database migrations completed, building backend...');
     
-    // Finally, start the backend
-    const startChild = spawn('npm', ['start'], {
+    // Then, build the backend
+    const buildChild = spawn('npm', ['run', 'build'], {
       cwd: backendPath,
       stdio: 'inherit',
       shell: true
     });
 
-    startChild.on('error', (error) => {
-      console.error('Failed to start backend:', error);
+    buildChild.on('error', (error) => {
+      console.error('Failed to build backend:', error);
       process.exit(1);
     });
 
-    startChild.on('exit', (code) => {
-      console.log('Backend exited with code:', code);
-      process.exit(code);
+    buildChild.on('exit', (code) => {
+      if (code !== 0) {
+        console.error('Build failed with code:', code);
+        process.exit(code);
+      }
+      
+      console.log('Build successful, starting backend...');
+      
+      // Finally, start the backend
+      const startChild = spawn('npm', ['start'], {
+        cwd: backendPath,
+        stdio: 'inherit',
+        shell: true
+      });
+
+      startChild.on('error', (error) => {
+        console.error('Failed to start backend:', error);
+        process.exit(1);
+      });
+
+      startChild.on('exit', (code) => {
+        console.log('Backend exited with code:', code);
+        process.exit(code);
+      });
     });
   });
 }); 

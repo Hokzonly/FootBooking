@@ -42,6 +42,7 @@ app.get('/', (req: Request, res: Response): void => {
 // Get all academies with their fields
 app.get('/academies', async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('Fetching academies...');
     const academies = await prisma.academy.findMany({
       select: {
         id: true,
@@ -54,9 +55,11 @@ app.get('/academies', async (req: Request, res: Response): Promise<void> => {
         fields: true
       }
     });
+    console.log('Academies found:', academies.length);
     res.json(academies);
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch academies' });
+  } catch (error) {
+    console.error('Error fetching academies:', error);
+    res.status(500).json({ error: 'Failed to fetch academies', details: error.message });
   }
 });
 
