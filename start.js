@@ -11,18 +11,41 @@ console.log('Current directory:', process.cwd());
 const backendPath = path.join(__dirname, 'backend');
 console.log('Backend path:', backendPath);
 
-const child = spawn('npm', ['start'], {
+// First, build the backend
+console.log('Building backend...');
+const buildChild = spawn('npm', ['run', 'build'], {
   cwd: backendPath,
   stdio: 'inherit',
   shell: true
 });
 
-child.on('error', (error) => {
-  console.error('Failed to start backend:', error);
+buildChild.on('error', (error) => {
+  console.error('Failed to build backend:', error);
   process.exit(1);
 });
 
-child.on('exit', (code) => {
-  console.log('Backend exited with code:', code);
-  process.exit(code);
+buildChild.on('exit', (code) => {
+  if (code !== 0) {
+    console.error('Build failed with code:', code);
+    process.exit(code);
+  }
+  
+  console.log('Build successful, starting backend...');
+  
+  // Now start the backend
+  const startChild = spawn('npm', ['start'], {
+    cwd: backendPath,
+    stdio: 'inherit',
+    shell: true
+  });
+
+  startChild.on('error', (error) => {
+    console.error('Failed to start backend:', error);
+    process.exit(1);
+  });
+
+  startChild.on('exit', (code) => {
+    console.log('Backend exited with code:', code);
+    process.exit(code);
+  });
 }); 
