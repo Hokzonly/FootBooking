@@ -1,5 +1,10 @@
-node_modules
-# Keep environment variables out of version control
+node_modules/
 .env
+*.log
+dist/
+build/
+.DS_Store
+google-credentials.json
+
 
 /generated/prisma

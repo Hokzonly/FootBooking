@@ -18,31 +18,15 @@ class EmailService {
   private fromName: string;
 
   constructor() {
-    // Use the provided API key
     const apiKey = process.env.MAILERSEND_API_KEY || 'mlsn.0d55ef3a1e1fb6559e2be6bf07ecbd327be2e918473191d461cf517cd8436afb';
-    // Use the verified MailerSend test domain
     this.fromEmail = process.env.MAILERSEND_FROM_EMAIL || 'booking@test-r9084zvd7mjgw63d.mlsender.net';
     this.fromName = process.env.MAILERSEND_FROM_NAME || 'FootBooking';
-    
-    console.log('Email service initialized with:', {
-      fromEmail: this.fromEmail,
-      fromName: this.fromName,
-      apiKeyLength: apiKey.length
-    });
     
     this.mailerSend = new MailerSend({ apiKey });
   }
 
   async sendBookingConfirmation(bookingDetails: BookingDetails): Promise<boolean> {
     try {
-      console.log('Attempting to send email with details:', {
-        fromEmail: this.fromEmail,
-        fromName: this.fromName,
-        toEmail: bookingDetails.customerEmail,
-        toName: bookingDetails.customerName,
-        bookingId: bookingDetails.bookingId
-      });
-
       const sender = new Sender(this.fromEmail, this.fromName);
       const recipient = new Recipient(bookingDetails.customerEmail, bookingDetails.customerName);
 
@@ -53,24 +37,14 @@ class EmailService {
         .setHtml(this.generateBookingEmailHTML(bookingDetails))
         .setText(this.generateBookingEmailText(bookingDetails));
 
-      console.log('Email params created:', {
-        from: this.fromEmail,
-        to: bookingDetails.customerEmail,
-        subject: `🎉 Booking Confirmed - ${bookingDetails.fieldName}`
-      });
-
       const response = await this.mailerSend.email.send(emailParams);
-      
-      console.log('Email sent successfully:', response);
       return true;
     } catch (error: unknown) {
       console.error('Failed to send email:', error);
       
-      // Check if it's a domain verification error
       const errorObj = error as { body?: { message?: string } };
       if (errorObj.body?.message?.includes('domain must be verified')) {
         console.error('Domain verification error. Please verify your sender domain in MailerSend dashboard.');
-        console.error('For now, booking will be created but email will not be sent.');
         return false;
       }
       

@@ -5,19 +5,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('Starting backend...');
-console.log('Current directory:', process.cwd());
-console.log('Environment variables:', Object.keys(process.env).filter(key => key.includes('DATABASE') || key.includes('JWT') || key.includes('MAILER')));
-
 const backendPath = path.join(__dirname, 'backend');
-console.log('Backend path:', backendPath);
-
-// Pass all environment variables to child processes
 const env = { ...process.env };
-console.log('Environment variables being passed to backend:', Object.keys(env).filter(key => key.includes('DATABASE') || key.includes('JWT') || key.includes('MAILER')));
 
-// First, install dependencies
-console.log('Installing backend dependencies...');
 const installChild = spawn('npm', ['install'], {
   cwd: backendPath,
   stdio: 'inherit',
@@ -36,9 +26,6 @@ installChild.on('exit', (code) => {
     process.exit(code);
   }
   
-  console.log('Dependencies installed, setting up database...');
-  
-  // Then, run database migrations
   const migrateChild = spawn('npx', ['prisma', 'migrate', 'deploy'], {
     cwd: backendPath,
     stdio: 'inherit',
@@ -53,11 +40,7 @@ installChild.on('exit', (code) => {
 
   migrateChild.on('exit', (code) => {
     if (code !== 0) {
-      console.error('Migration failed with code:', code);
-      console.log('Skipping migrations and continuing with build...');
-      
-      // Continue with build even if migrations fail
-      console.log('Building backend...');
+      console.log('Migration failed, continuing with build...');
       
       const buildChild = spawn('npm', ['run', 'build'], {
         cwd: backendPath,
@@ -76,8 +59,6 @@ installChild.on('exit', (code) => {
           console.error('Build failed with code:', code);
           process.exit(code);
         }
-        
-        console.log('Build successful, starting backend...');
         
         const startChild = spawn('npm', ['start'], {
           cwd: backendPath,
@@ -99,9 +80,6 @@ installChild.on('exit', (code) => {
       return;
     }
     
-    console.log('Database migrations completed, seeding database...');
-    
-    // Then, seed the database
     const seedChild = spawn('npm', ['run', 'seed'], {
       cwd: backendPath,
       stdio: 'inherit',
@@ -116,15 +94,9 @@ installChild.on('exit', (code) => {
 
     seedChild.on('exit', (code) => {
       if (code !== 0) {
-        console.error('Seed failed with code:', code);
-        console.log('Continuing with build anyway...');
-      } else {
-        console.log('Database seeded successfully');
+        console.log('Seed failed, continuing with build...');
       }
       
-      console.log('Building backend...');
-      
-      // Then, build the backend
       const buildChild = spawn('npm', ['run', 'build'], {
         cwd: backendPath,
         stdio: 'inherit',
@@ -143,9 +115,6 @@ installChild.on('exit', (code) => {
           process.exit(code);
         }
         
-        console.log('Build successful, starting backend...');
-        
-        // Finally, start the backend
         const startChild = spawn('npm', ['start'], {
           cwd: backendPath,
           stdio: 'inherit',

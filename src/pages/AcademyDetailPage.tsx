@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Phone, Star, Clock, User as UserIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Phone, User as UserIcon, ChevronLeft, ChevronRight, Calendar, Users } from 'lucide-react';
 import { ImageCarousel } from '../components/ImageCarousel';
+import { GallerySection } from '../components/GallerySection';
+import { PricingSection } from '../components/PricingSection';
 import { Academy, Booking, Field } from '../types';
 import { addDays, startOfWeek, format } from 'date-fns';
 import { ErrorPopup } from '../components/ErrorPopup';
 import { API_URL } from '../config/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const HOURS = ['19:00', '20:00', '21:00', '22:00', '23:00', '00:00', '01:00'];
 
-
 export const AcademyDetailPage: React.FC = () => {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [academy, setAcademy] = useState<Academy | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,17 +23,13 @@ export const AcademyDetailPage: React.FC = () => {
   const [form, setForm] = useState<{ firstName: string; lastName: string; phone: string; email: string }>({ firstName: '', lastName: '', phone: '', email: '' });
   const [submitting, setSubmitting] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  // Add state for phone input touched and validity
   const [phoneTouched, setPhoneTouched] = useState(false);
   const phoneRegex = /^\+212[5-7]\d{8}$/;
   const phoneValid = phoneRegex.test(form.phone);
-  // Add state for pending booking and confirmation
   const [pendingBooking, setPendingBooking] = useState<(Booking & { field: Field; date: Date }) | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
-
-  console.log('All bookings:', bookings);
 
   // Helper to fetch bookings for the current week
   const fetchBookings = () => {
@@ -83,6 +82,7 @@ export const AcademyDetailPage: React.FC = () => {
 
   // Gather all field images for the carousel
   const images = academy.fields ? academy.fields.map(f => f.image) : [];
+  const galleryImages = academy.gallery || images;
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -104,22 +104,18 @@ export const AcademyDetailPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected || !selectedField) return;
-    // Phone number validation (Moroccan format: +212XXXXXXXXX)
     if (!phoneValid) {
       setPhoneTouched(true);
       setSubmitting(false);
       return;
     }
-    // Validate required fields
     if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim() || !form.email.trim()) {
       alert('Please fill in all required fields including email address.');
       return;
     }
     setSubmitting(true);
     try {
-      // Combine first and last name for customerName
       const customerName = form.firstName.trim() + ' ' + form.lastName.trim();
-      // Set date to local midnight for the selected day
       const localDate = new Date(selected.date.getFullYear(), selected.date.getMonth(), selected.date.getDate());
       const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
@@ -157,50 +153,100 @@ export const AcademyDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-        <div>
-          <ImageCarousel images={images} />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+              <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold text-gray-900">{t('academyProfile')}</h1>
+              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
         </div>
-        <div className="space-y-4 sm:space-y-6">
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Banner Section */}
+        <div className="mb-8">
+          <ImageCarousel 
+            images={images} 
+            autoSlide={true}
+            slideInterval={4000}
+            showNavigation={false}
+            className="rounded-lg overflow-hidden"
+          />
+        </div>
+
+        {/* Info Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">{t('info')}</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <Calendar className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{academy.name}</h1>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 mb-4">
-              <div className="flex items-center">
-                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 fill-current" />
-                <span className="ml-1 text-gray-700 text-sm sm:text-base">{academy.rating}</span>
+                  <p className="text-sm text-gray-600">{t('openingHours')}</p>
+                  <p className="font-medium text-gray-900">16:00 - 17:00</p>
+                  <p className="text-sm text-gray-500">4 PM - 5 PM</p>
+                </div>
               </div>
-              <div className="flex items-center text-gray-600">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
-                <span className="text-sm sm:text-base">{academy.location}</span>
-              </div>
-            </div>
-            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{academy.description}</p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Contact Information</h3>
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-3 flex-shrink-0" />
-                <span className="text-gray-700 text-sm sm:text-base">{academy.phone}</span>
-              </div>
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-3 flex-shrink-0" />
-                <span className="text-gray-700 text-sm sm:text-base">{academy.location}</span>
+              
+              <div className="flex items-start space-x-3">
+                <MapPin className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-600">{t('location')}</p>
+                  <p className="font-medium text-gray-900">070:F788 S63</p>
+                  <p className="text-sm text-gray-500">@footBookly.com</p>
+                </div>
               </div>
             </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <MapPin className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-600">{t('location')}</p>
+                  <p className="font-medium text-gray-900">Allis: FootBooiny</p>
           </div>
-          <div className="bg-green-50 rounded-lg p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Operating Hours</h3>
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-3 flex-shrink-0" />
-              <span className="text-gray-700 text-sm sm:text-base">Daily: 19:00 - 01:00</span>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <Users className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-600">FootBooking</p>
+                </div>
+              </div>
             </div>
           </div>
+
+
+            </div>
+
+        {/* Gallery Section */}
+        <div className="mb-8">
+          <GallerySection 
+            images={galleryImages}
+            title={t('gallery')}
+            autoSlide={true}
+            slideInterval={3000}
+          />
+          </div>
+
+        {/* Pricing Section */}
+        <div className="mb-8">
+          <PricingSection 
+            monthlyPrice={academy.monthlyPrice || 500}
+            academyName={academy.name}
+          />
         </div>
-      </div>
-      <div className="mt-8 sm:mt-12">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Book a Field</h2>
+
+        {/* Booking Section */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">{t('bookField')}</h2>
+          
         {/* Tabs for fields */}
         <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 overflow-x-auto">
           {academy.fields && academy.fields.map((field) => (
@@ -213,6 +259,7 @@ export const AcademyDetailPage: React.FC = () => {
             </button>
           ))}
         </div>
+
         {/* Week navigation */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -231,6 +278,7 @@ export const AcademyDetailPage: React.FC = () => {
             <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
+
         {/* Timetable for selected field */}
         {selectedField && (
           <div className="overflow-x-auto">
@@ -253,13 +301,11 @@ export const AcademyDetailPage: React.FC = () => {
                     <td className="py-2 px-2 sm:px-3 font-medium text-gray-700 bg-gray-50">{hour}</td>
                     {weekDays.map((day, dayIdx) => {
                       const booked = isBooked(selectedField.id, day, hour);
-                      // Determine if the slot is in the past
                       const now = new Date();
                       const isToday =
                         day.getFullYear() === now.getFullYear() &&
                         day.getMonth() === now.getMonth() &&
                         day.getDate() === now.getDate();
-                      // Parse hour string to a Date object for comparison
                       const [h, m] = hour.split(":");
                       const slotDate = new Date(day);
                       slotDate.setHours(Number(h), Number(m || 0), 0, 0);
@@ -289,6 +335,8 @@ export const AcademyDetailPage: React.FC = () => {
           </div>
         )}
       </div>
+      </div>
+
       {/* Booking Modal */}
       {selected && selectedField && !showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -387,6 +435,7 @@ export const AcademyDetailPage: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Confirmation Modal */}
       {showConfirmModal && pendingBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -422,13 +471,11 @@ export const AcademyDetailPage: React.FC = () => {
               <button
                 className="flex-1 py-2.5 sm:py-3 px-4 sm:px-6 border-2 border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all duration-200 font-semibold text-sm sm:text-base"
                 onClick={async () => {
-                  // Delete booking
                   await fetch(`${API_URL}/bookings/${pendingBooking.id}`, { method: 'DELETE' });
                   setPendingBooking(null);
                   setShowConfirmModal(false);
                   setForm({ firstName: '', lastName: '', phone: '', email: '' });
                   fetchBookings();
-                  // Show cancel message
                   setError('Booking canceled successfully! ❌');
                   setShowErrorPopup(true);
                 }}
@@ -439,7 +486,6 @@ export const AcademyDetailPage: React.FC = () => {
                 className="flex-1 py-2.5 sm:py-3 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg text-sm sm:text-base"
                 onClick={async () => {
                   try {
-                    // Send email confirmation
                     const response = await fetch(`${API_URL}/send-email`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -466,7 +512,6 @@ export const AcademyDetailPage: React.FC = () => {
                     setForm({ firstName: '', lastName: '', phone: '', email: '' });
                     fetchBookings();
                     
-                    // Show appropriate message based on email success
                     if (result.success) {
                       setError('🎉 Booking confirmed successfully! ⚽ Email confirmation sent! 📧');
                     } else {

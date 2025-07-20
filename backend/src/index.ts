@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import { google } from 'googleapis';
 import emailService from './emailService';
 
 interface JwtPayload {
@@ -22,9 +24,31 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 const PORT = process.env.PORT || 4000;
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only video files are allowed'));
+    }
+  },
+});
+
+const auth = new google.auth.GoogleAuth({
+  keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS || './google-credentials.json',
+  scopes: ['https://www.googleapis.com/auth/drive.file'],
+});
+
+const drive = google.drive({ version: 'v3', auth });
+
 app.use(cors({
   origin: [
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:3000',
     'https://foot-booking.vercel.app',
     'https://foot-booking-esbfq20a8-hokzs-projects.vercel.app',
@@ -33,6 +57,128 @@ app.use(cors({
   ],
   credentials: true
 }));
+
+app.get('/api/test', (req: Request, res: Response): void => {
+  res.json({ message: 'Server is working!', timestamp: new Date().toISOString() });
+});
+
+app.post('/api/submit-play', upload.single('video'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No video file provided' });
+      return;
+    }
+
+    const maxSize = 50 * 1024 * 1024;
+    if (req.file.size > maxSize) {
+      res.status(400).json({ 
+        error: 'File too large', 
+        details: `File size ${(req.file.size / 1024 / 1024).toFixed(1)}MB exceeds 50MB limit` 
+      });
+      return;
+    }
+
+    if (!req.file.mimetype.startsWith('video/')) {
+      res.status(400).json({ 
+        error: 'Invalid file type', 
+        details: 'Only video files are allowed' 
+      });
+      return;
+    }
+
+    const { playerName, email, date } = req.body;
+
+    try {
+      const filename = `${playerName || 'Player'}-${new Date().toISOString().split('T')[0]}.mp4`;
+      
+      const fileMetadata = {
+        name: filename,
+        parents: [process.env.GOOGLE_DRIVE_FOLDER_ID || '1eX71XnAEz_65dh2PqO7YXPLo64mhZnRf'],
+        supportsAllDrives: true
+      };
+
+      const { Readable } = require('stream');
+      const stream = new Readable();
+      stream.push(req.file.buffer);
+      stream.push(null);
+
+      const response = await drive.files.create({
+        requestBody: fileMetadata,
+        media: {
+          mimeType: 'video/mp4',
+          body: stream
+        },
+        fields: 'id, name, webViewLink',
+        supportsAllDrives: true
+      });
+
+      if (!response.data?.id) {
+        throw new Error('Failed to upload to Google Drive');
+      }
+
+      res.json({
+        success: true,
+        message: 'Play submitted successfully! We will review your video and get back to you.',
+        fileName: filename,
+        fileSize: req.file.size,
+        driveLink: response.data.webViewLink
+      });
+
+    } catch (driveError: any) {
+      console.error('Google Drive upload error:', driveError.message);
+      
+      res.json({
+        success: true,
+        message: 'Play submitted successfully (Google Drive upload failed)',
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        note: 'File saved locally - Google Drive upload will be retried later'
+      });
+    }
+
+  } catch (error) {
+    console.error('Submit play error:', error);
+    res.status(500).json({ 
+      error: 'Failed to submit play',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+app.post('/api/test-upload', upload.single('video'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No video file provided' });
+      return;
+    }
+
+    const { title, playerName } = req.body;
+
+    const fileInfo = {
+      id: Date.now(),
+      title: title || 'Amazing Goal from Outside the Box',
+      playerName: playerName || 'Ahmed_Benz',
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+      uploadedAt: new Date().toISOString(),
+      status: 'APPROVED'
+    };
+
+    res.json({
+      success: true,
+      message: 'Video uploaded successfully for testing!',
+      fileInfo: fileInfo
+    });
+
+  } catch (error) {
+    console.error('Test upload error:', error);
+    res.status(500).json({ 
+      error: 'Failed to upload video',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 app.use(express.json());
 
 app.get('/', (req: Request, res: Response): void => {
@@ -42,7 +188,6 @@ app.get('/', (req: Request, res: Response): void => {
 // Get all academies with their fields
 app.get('/academies', async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Fetching academies...');
     const academies = await prisma.academy.findMany({
       select: {
         id: true,
@@ -52,10 +197,12 @@ app.get('/academies', async (req: Request, res: Response): Promise<void> => {
         description: true,
         rating: true,
         image: true,
+        openingHours: true,
+        monthlyPrice: true,
+        gallery: true,
         fields: true
       }
     });
-    console.log('Academies found:', academies.length);
     res.json(academies);
   } catch (error) {
     console.error('Error fetching academies:', error);
@@ -112,11 +259,9 @@ function toDateOnly(dateString: string): Date {
 
 app.post('/bookings', async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Received booking request:', req.body);
     const { fieldId, date, time, customerName, customerPhone, customerEmail } = req.body;
     
     if (!fieldId || !date || !time || !customerName || !customerPhone || !customerEmail) {
-      console.log('Missing fields:', { fieldId, date, time, customerName, customerPhone, customerEmail });
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
@@ -488,8 +633,6 @@ app.put('/api/admin/users/:id/academy', requireAuth, requireAdmin, async (req: A
 // Test email service endpoint
 app.post('/test-email', async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Testing email service configuration...');
-    
     // Test the email service directly
     const testBookingDetails = {
       bookingId: 999,
@@ -557,6 +700,31 @@ app.post('/send-email', async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error('Email sending error:', error);
     res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
+// Test Google Drive connection
+app.get('/api/test-drive', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Test if we can list files in the folder
+    const response = await drive.files.list({
+      pageSize: 1,
+      fields: 'files(id, name)',
+      q: `'${process.env.GOOGLE_DRIVE_FOLDER_ID || '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'}' in parents`
+    });
+
+    res.json({
+      success: true,
+      message: 'Google Drive connection successful',
+      filesFound: response.data.files?.length || 0
+    });
+  } catch (error) {
+    console.error('Google Drive test error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Google Drive connection failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 

@@ -8,28 +8,31 @@ import { BookingConfirmationPage } from './pages/BookingConfirmationPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminLogin } from './pages/AdminLogin';
 import { BookingProvider } from './contexts/BookingContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
 function App() {
   return (
-    <BookingProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Header />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/academy/:id" element={<AcademyDetailPage />} />
-            <Route path="/booking/:academyId/:fieldId" element={<BookingCalendarPage />} />
-            <Route path="/confirmation/:bookingId" element={<BookingConfirmationPage />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Routes>
-        </div>
-      </Router>
-    </BookingProvider>
+    <LanguageProvider>
+      <BookingProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Header />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/academy/:id" element={<AcademyDetailPage />} />
+              <Route path="/booking/:academyId/:fieldId" element={<BookingCalendarPage />} />
+              <Route path="/confirmation/:bookingId" element={<BookingConfirmationPage />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Routes>
+          </div>
+        </Router>
+      </BookingProvider>
+    </LanguageProvider>
   );
 }
 

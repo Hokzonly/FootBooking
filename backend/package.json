@@ -9,18 +9,26 @@
     "seed": "ts-node ./prisma/seed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["football", "booking", "sports", "api"],
+  "keywords": [
+    "football",
+    "booking",
+    "sports",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
   "description": "Backend API for FootBooking - Football field booking platform",
   "dependencies": {
     "@prisma/client": "^6.11.1",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
+    "googleapis": "^153.0.0",
     "jsonwebtoken": "^9.0.2",
     "mailersend": "^2.6.0",
+    "multer": "^2.0.2",
     "prisma": "prisma"
   },
   "prisma": {

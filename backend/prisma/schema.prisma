@@ -40,6 +40,9 @@ model Academy {
   description String
   image     String
   rating    Float?
+  openingHours String?
+  monthlyPrice Int?
+  gallery   String[] @default([])
   fields    Field[]
   admin     User?    @relation("AcademyAdmin")
 }

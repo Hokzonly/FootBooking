@@ -12,6 +12,9 @@ export interface Academy {
   images: string[];
   fields: Field[];
   image?: string;
+  openingHours?: string;
+  monthlyPrice?: number;
+  gallery?: string[];
 }
 
 export interface Field {

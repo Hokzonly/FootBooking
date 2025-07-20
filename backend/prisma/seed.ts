@@ -11,7 +11,8 @@ const images = [
 ];
 
 async function main() {
-  // Cleanup: delete all fields and all academies
+  // Cleanup: delete all bookings, fields and academies
+  await prisma.booking.deleteMany({});
   await prisma.field.deleteMany({});
   await prisma.academy.deleteMany({});
 
@@ -25,6 +26,13 @@ async function main() {
       phone: '+212 651195544',
       description: 'Centre de football moderne à Marrakech, offrant des terrains de qualité supérieure, un environnement convivial et des horaires flexibles pour tous les passionnés du ballon rond.',
       image: images[0],
+      openingHours: '16:00 - 17:00',
+      monthlyPrice: 500,
+      gallery: [
+        'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
     },
   });
   // Fields for footacademy
@@ -46,6 +54,13 @@ async function main() {
       phone: '+212 600112233',
       description: 'Kickoff Academy à Casablanca propose des terrains modernes, parfaits pour les matchs entre amis ou les entraînements professionnels.',
       image: images[0],
+      openingHours: '16:00 - 17:00',
+      monthlyPrice: 600,
+      gallery: [
+        'https://images.pexels.com/photos/325355/pexels-photo-325355.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/46798/pexels-photo-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
     },
   });
   // Fields for kickoff academy
@@ -67,6 +82,13 @@ async function main() {
       phone: '+212 677889900',
       description: 'Palmarena à Agadir offre un environnement agréable et des terrains de football de haute qualité pour tous les âges.',
       image: images[0],
+      openingHours: '16:00 - 17:00',
+      monthlyPrice: 450,
+      gallery: [
+        'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/325355/pexels-photo-325355.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
     },
   });
   // Fields for palmarena
@@ -88,6 +110,13 @@ async function main() {
       phone: '+212 633221144',
       description: 'Masterfoot à Rabat, le choix idéal pour les passionnés de football recherchant des installations modernes et un accueil chaleureux.',
       image: images[0],
+      openingHours: '16:00 - 17:00',
+      monthlyPrice: 550,
+      gallery: [
+        'https://images.pexels.com/photos/46798/pexels-photo-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
     },
   });
   // Fields for masterfoot

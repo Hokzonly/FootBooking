@@ -84,9 +84,6 @@ export const BookingCalendarPage: React.FC = () => {
     e.preventDefault();
     if (!selectedSlot) return;
 
-    console.log('Form data before submission:', bookingData);
-    console.log('Email value:', bookingData.email);
-
     // Validate required fields
     if (!bookingData.firstName.trim() || !bookingData.lastName.trim() || !bookingData.phone.trim() || !bookingData.email.trim()) {
       alert('Please fill in all required fields including email address.');

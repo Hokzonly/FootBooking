@@ -51,46 +51,34 @@ export const BookingProvider: React.FC<BookingProviderProps> = ({ children }) =>
   ]);
 
   const createBooking = async (bookingData: Omit<Booking, 'id'>): Promise<Booking> => {
-    console.log('createBooking called with:', bookingData);
-    
-    const requestBody = {
-      fieldId: Number(bookingData.fieldId), // Convert to number for backend
-      date: bookingData.date,
-      time: bookingData.time,
-      customerName: bookingData.customerName,
-      customerPhone: bookingData.customerPhone,
-      customerEmail: bookingData.customerEmail
-    };
-    
-    console.log('Sending booking request:', requestBody);
-    console.log('customerEmail in requestBody:', requestBody.customerEmail);
-    console.log('fieldId type:', typeof requestBody.fieldId);
-    
-    const response = await fetch(`${API_URL}/bookings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fieldId: Number(bookingData.fieldId), // Convert to number for backend
+    try {
+      const requestBody = {
+        fieldId: bookingData.fieldId,
         date: bookingData.date,
         time: bookingData.time,
         customerName: bookingData.customerName,
         customerPhone: bookingData.customerPhone,
-        customerEmail: bookingData.customerEmail,
-        academyId: bookingData.academyId,
-        academyName: bookingData.academyName,
-        fieldType: bookingData.fieldType
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Booking failed:', errorText);
-      throw new Error('Booking failed: ' + errorText);
+        customerEmail: bookingData.customerEmail
+      };
+
+      const response = await fetch(`${API_URL}/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create booking');
+      }
+
+      const booking = await response.json();
+      setBookings(prev => [...prev, booking]);
+      return booking;
+    } catch (error) {
+      throw error;
     }
-    
-    const booking = await response.json();
-    setBookings(prev => [...prev, booking]);
-    return booking;
   };
 
   const getBooking = (id: string): Booking | undefined => {
