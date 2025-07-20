@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "build": "tsc",
+    "build": "node --max-old-space-size=4096 ./node_modules/.bin/tsc",
+    "build:light": "node --max-old-space-size=2048 ./node_modules/.bin/tsc --skipLibCheck",
+    "build:minimal": "node --max-old-space-size=1024 ./node_modules/.bin/tsc --skipLibCheck --noEmitOnError false",
+    "build:railway": "node --max-old-space-size=${NODE_OPTIONS:-2048} ./node_modules/.bin/tsc --skipLibCheck",
     "dev": "ts-node src/index.ts",
     "seed": "ts-node ./prisma/seed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
