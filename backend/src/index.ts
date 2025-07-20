@@ -21,7 +21,10 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.warn('JWT_SECRET not found in environment variables');
+}
 const PORT = process.env.PORT || 4000;
 
 const upload = multer({
@@ -93,7 +96,7 @@ app.post('/api/submit-play', upload.single('video'), async (req: Request, res: R
       
       const fileMetadata = {
         name: filename,
-        parents: [process.env.GOOGLE_DRIVE_FOLDER_ID || '1eX71XnAEz_65dh2PqO7YXPLo64mhZnRf'],
+        parents: [process.env.GOOGLE_DRIVE_FOLDER_ID || ''],
         supportsAllDrives: true
       };
 
@@ -402,7 +405,7 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
     
     const token = jwt.sign(
       { userId: user.id, role: user.role }, 
-      JWT_SECRET, 
+      JWT_SECRET || 'supersecret', 
       { expiresIn: '1d' }
     );
     
@@ -453,7 +456,7 @@ function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunctio
   
   try {
     const token = auth.split(' ')[1];
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const payload = jwt.verify(token, JWT_SECRET || 'supersecret') as JwtPayload;
     req.user = payload;
     next();
   } catch {

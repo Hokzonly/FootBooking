@@ -18,11 +18,14 @@ class EmailService {
   private fromName: string;
 
   constructor() {
-    const apiKey = process.env.MAILERSEND_API_KEY || 'mlsn.0d55ef3a1e1fb6559e2be6bf07ecbd327be2e918473191d461cf517cd8436afb';
+    const apiKey = process.env.MAILERSEND_API_KEY;
+    if (!apiKey) {
+      console.warn('MAILERSEND_API_KEY not found in environment variables');
+    }
     this.fromEmail = process.env.MAILERSEND_FROM_EMAIL || 'booking@test-r9084zvd7mjgw63d.mlsender.net';
     this.fromName = process.env.MAILERSEND_FROM_NAME || 'FootBooking';
     
-    this.mailerSend = new MailerSend({ apiKey });
+    this.mailerSend = new MailerSend({ apiKey: apiKey || '' });
   }
 
   async sendBookingConfirmation(bookingDetails: BookingDetails): Promise<boolean> {
