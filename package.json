@@ -7,6 +7,8 @@
     "start": "node start.js",
     "dev": "vite",
     "build": "vite build",
+    "build:backend": "cd backend && npm install && npm run build:light",
+    "build:full": "npm run build && npm run build:backend",
     "lint": "eslint .",
     "preview": "vite preview"
   },
