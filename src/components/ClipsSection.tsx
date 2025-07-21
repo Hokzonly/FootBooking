@@ -1,22 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Play, Eye, Heart, MessageCircle } from 'lucide-react';
 import styled from 'styled-components';
-import CustomToggle from './CustomToggle';
 
-interface Clip {
-  id: string;
-  title: string;
-  videoUrl: string;
-  thumbnailUrl: string;
-  playerName: string;
-  academyName: string;
-  likes: number;
-  comments: number;
-  views: number;
-  date: string;
-  isFeatured: boolean;
-}
+
 
 interface ClipsSectionProps {
   className?: string;
@@ -55,88 +42,30 @@ const PhoneFrame = styled.div`
 `;
 
 export const ClipsSection: React.FC<ClipsSectionProps> = ({ className = "" }) => {
-  const [activeTab, setActiveTab] = useState<'week' | 'month'>('week');
-  const [isMonthSelected, setIsMonthSelected] = useState(false);
-  const [featuredClip, setFeaturedClip] = useState({
+  const featuredClip = {
     id: 1,
-    title: "Amazing Goal from Outside the Box",
-    playerName: "@Ahmed_Benz",
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+    title: "Amazing Football Skills - Hokzi",
+    playerName: "@Hokzi",
+    videoUrl: "https://www.youtube.com/watch?v=q4N5hot7a60&ab_channel=Hokzi",
     views: 1247,
     likes: 89,
     comments: 23,
     uploadedAt: "2025-07-20"
-  });
+  };
 
-  const weeklyClips: Clip[] = useMemo(() => [
-    {
-      id: '1',
-      title: 'Amazing Goal from Outside the Box',
-      videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-      thumbnailUrl: 'https://images.pexels.com/photos/46798/pexels-photo-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
-      playerName: 'Ahmed_Benz',
-      academyName: 'FootAcademy Marrakech',
-      likes: 156,
-      comments: 23,
-      views: 1247,
-      date: '2024-01-15',
-      isFeatured: true
-    },
-    {
-      id: '2',
-      title: 'Perfect Team Play - 3 Passes Goal',
-      videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-      thumbnailUrl: 'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
-      playerName: 'Youssef_Pro',
-      academyName: 'Kickoff Academy',
-      likes: 89,
-      comments: 12,
-      views: 892,
-      date: '2024-01-14',
-      isFeatured: false
+  // Function to convert YouTube URL to embed URL
+  const getYouTubeEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/embed/')) {
+      return url;
     }
-  ], []);
-
-  const monthlyClips: Clip[] = useMemo(() => [
-    {
-      id: '3',
-      title: 'Best Goal of January 2024',
-      videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-      thumbnailUrl: 'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800',
-      playerName: 'Karim_Star',
-      academyName: 'Masterfoot Academy',
-      likes: 342,
-      comments: 45,
-      views: 2156,
-      date: '2024-01-10',
-      isFeatured: true
+    
+    // Extract video ID from various YouTube URL formats
+    const videoIdMatch = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+    if (videoIdMatch) {
+      return `https://www.youtube.com/embed/${videoIdMatch[1]}?autoplay=1&mute=1&loop=1&playlist=${videoIdMatch[1]}&controls=0&showinfo=0&rel=0&modestbranding=1`;
     }
-  ], []);
-
-  const currentClips = useMemo(() => 
-    activeTab === 'week' ? weeklyClips : monthlyClips, 
-    [activeTab, weeklyClips, monthlyClips]
-  );
-  
-  useEffect(() => {
-    const newFeaturedClip = currentClips.find(clip => clip.isFeatured) || currentClips[0];
-    if (newFeaturedClip) {
-      setFeaturedClip({
-        id: parseInt(newFeaturedClip.id),
-        title: newFeaturedClip.title,
-        playerName: `@${newFeaturedClip.playerName}`,
-        videoUrl: newFeaturedClip.videoUrl,
-        views: newFeaturedClip.views,
-        likes: newFeaturedClip.likes,
-        comments: newFeaturedClip.comments,
-        uploadedAt: newFeaturedClip.date
-      });
-    }
-  }, [currentClips]);
-
-  const handleToggleChange = (checked: boolean) => {
-    setIsMonthSelected(checked);
-    setActiveTab(checked ? 'month' : 'week');
+    
+    return url;
   };
 
   return (
@@ -157,18 +86,7 @@ export const ClipsSection: React.FC<ClipsSectionProps> = ({ className = "" }) =>
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
-          className="flex justify-center mb-8"
-        >
-          <CustomToggle 
-            isChecked={isMonthSelected}
-            onChange={handleToggleChange}
-          />
-        </motion.div>
+
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -181,19 +99,32 @@ export const ClipsSection: React.FC<ClipsSectionProps> = ({ className = "" }) =>
             <div className="flex flex-col items-center">
               <PhoneFrame>
                 <div className="screen">
-                  <video
-                    className="w-full h-full object-cover"
-                    muted
-                    loop
-                    autoPlay
-                    playsInline
-                    src={featuredClip.videoUrl}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                  <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                    <Play className="w-12 h-12 text-white opacity-80" />
-                  </div>
+                  {featuredClip.videoUrl.includes('youtube.com') ? (
+                    <iframe
+                      className="w-full h-full"
+                      src={getYouTubeEmbedUrl(featuredClip.videoUrl)}
+                      title={featuredClip.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                      src={featuredClip.videoUrl}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  )}
+                  {!featuredClip.videoUrl.includes('youtube.com') && (
+                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                      <Play className="w-12 h-12 text-white opacity-80" />
+                    </div>
+                  )}
                 </div>
               </PhoneFrame>
 
