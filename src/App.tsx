@@ -7,6 +7,7 @@ import { BookingCalendarPage } from './pages/BookingCalendarPage';
 import { BookingConfirmationPage } from './pages/BookingConfirmationPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminLogin } from './pages/AdminLogin';
+import { TournamentsPage } from './pages/TournamentsPage';
 import { BookingProvider } from './contexts/BookingContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import LoginPage from './pages/LoginPage';
@@ -24,6 +25,7 @@ function App() {
               <Route path="/academy/:id" element={<AcademyDetailPage />} />
               <Route path="/booking/:academyId/:fieldId" element={<BookingCalendarPage />} />
               <Route path="/confirmation/:bookingId" element={<BookingConfirmationPage />} />
+              <Route path="/tournaments" element={<TournamentsPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/login" element={<LoginPage />} />

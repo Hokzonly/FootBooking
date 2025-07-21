@@ -27,7 +27,8 @@
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^7.6.3",
-    "styled-components": "^6.1.19"
+    "styled-components": "^6.1.19",
+    "swiper": "^11.2.10"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

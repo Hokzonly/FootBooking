@@ -10,6 +10,18 @@ const images = [
   'https://images.pexels.com/photos/46798/pexels-photo-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
 ];
 
+// Gallery images for academies
+const galleryImages = [
+  'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/325355/pexels-photo-325355.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/46798/pexels-photo-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/3621104/pexels-photo-3621104.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/3628912/pexels-photo-3628912.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/3628925/pexels-photo-3628925.jpeg?auto=compress&cs=tinysrgb&w=800',
+];
+
 async function main() {
   // Cleanup: delete all bookings, fields and academies
   await prisma.booking.deleteMany({});
@@ -28,11 +40,7 @@ async function main() {
       image: images[0],
       openingHours: '16:00 - 17:00',
       monthlyPrice: 500,
-      gallery: [
-        'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
+      gallery: galleryImages,
     },
   });
   // Fields for footacademy
@@ -56,11 +64,7 @@ async function main() {
       image: images[0],
       openingHours: '16:00 - 17:00',
       monthlyPrice: 600,
-      gallery: [
-        'https://images.pexels.com/photos/325355/pexels-photo-325355.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/46798/pexels-photo-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
+      gallery: galleryImages,
     },
   });
   // Fields for kickoff academy
@@ -84,11 +88,7 @@ async function main() {
       image: images[0],
       openingHours: '16:00 - 17:00',
       monthlyPrice: 450,
-      gallery: [
-        'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/325355/pexels-photo-325355.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
+      gallery: galleryImages,
     },
   });
   // Fields for palmarena
@@ -112,11 +112,7 @@ async function main() {
       image: images[0],
       openingHours: '16:00 - 17:00',
       monthlyPrice: 550,
-      gallery: [
-        'https://images.pexels.com/photos/46798/pexels-photo-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1618200/pexels-photo-1618200.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
+      gallery: galleryImages,
     },
   });
   // Fields for masterfoot

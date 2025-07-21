@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, User, Menu, X } from 'lucide-react';
+import { MapPin, Calendar, User, Menu, X, Trophy } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const location = useLocation();
@@ -35,6 +35,30 @@ export const Header: React.FC = () => {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
+            {!isAdminRoute && (
+              <button 
+                onClick={() => {
+                  navigate('/');
+                  setTimeout(() => {
+                    const academiesSection = document.getElementById('academies-section');
+                    academiesSection?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+                className="text-gray-700 hover:text-green-600 transition-colors flex items-center"
+              >
+                <Calendar className="h-5 w-5 mr-2" />
+                Reservation
+              </button>
+            )}
+            {!isAdminRoute && (
+              <Link 
+                to="/tournaments" 
+                className="text-gray-700 hover:text-green-600 transition-colors flex items-center"
+              >
+                <Trophy className="h-5 w-5 mr-2" />
+                Tournoi
+              </Link>
+            )}
             {isAdminRoute ? (
               <Link to="/" className="text-gray-700 hover:text-green-600 transition-colors">
                 Back to App
@@ -74,6 +98,32 @@ export const Header: React.FC = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="flex flex-col space-y-3">
+              {!isAdminRoute && (
+                <button 
+                  onClick={() => {
+                    navigate('/');
+                    setIsMobileMenuOpen(false);
+                    setTimeout(() => {
+                      const academiesSection = document.getElementById('academies-section');
+                      academiesSection?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                  className="text-gray-700 hover:text-green-600 transition-colors px-4 py-2 flex items-center text-left"
+                >
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Reservation
+                </button>
+              )}
+              {!isAdminRoute && (
+                <Link 
+                  to="/tournaments" 
+                  className="text-gray-700 hover:text-green-600 transition-colors px-4 py-2 flex items-center"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Tournoi
+                </Link>
+              )}
               {isAdminRoute ? (
                 <Link 
                   to="/" 

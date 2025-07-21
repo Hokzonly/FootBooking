@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Phone, User as UserIcon, ChevronLeft, ChevronRight, Calendar, Users } from 'lucide-react';
-import { ImageCarousel } from '../components/ImageCarousel';
 import { GallerySection } from '../components/GallerySection';
 import { PricingSection } from '../components/PricingSection';
 import { Academy, Booking, Field } from '../types';
@@ -168,13 +167,29 @@ export const AcademyDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Banner Section */}
         <div className="mb-8">
-          <ImageCarousel 
-            images={images} 
-            autoSlide={true}
-            slideInterval={4000}
-            showNavigation={false}
-            className="rounded-lg overflow-hidden"
-          />
+          <div className="relative h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
+            {images && images.length > 0 ? (
+              <img
+                src={images[0]}
+                alt={`${academy.name} cover`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                <div className="text-center text-white">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">{academy.name}</h1>
+                  <p className="text-lg sm:text-xl opacity-90">Football Academy</p>
+                </div>
+              </div>
+            )}
+            {/* Overlay with academy name */}
+            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+              <div className="text-center text-white">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 drop-shadow-lg">{academy.name}</h1>
+                <p className="text-lg sm:text-xl opacity-90 drop-shadow-lg">Football Academy</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Info Section */}
@@ -230,10 +245,8 @@ export const AcademyDetailPage: React.FC = () => {
           <GallerySection 
             images={galleryImages}
             title={t('gallery')}
-            autoSlide={true}
-            slideInterval={3000}
           />
-          </div>
+        </div>
 
         {/* Pricing Section */}
         <div className="mb-8">
