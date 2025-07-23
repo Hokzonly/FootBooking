@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
 const prisma = new PrismaClient();
 
 // Field images
@@ -123,6 +125,70 @@ async function main() {
   await prisma.field.create({ data: { type: '6v6 Field', capacity: 12, pricePerHour: 360, image: images[4], academyId: masterfoot.id } });
   await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[0], academyId: masterfoot.id } });
   await prisma.field.create({ data: { type: '5v5 Field', capacity: 10, pricePerHour: 300, image: images[1], academyId: masterfoot.id } });
+
+  // Create admin users
+  console.log('Creating admin users...');
+  
+  // Super Admin
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  await prisma.user.create({
+    data: {
+      email: 'admin@footbooking.com',
+      password: adminPassword,
+      name: 'Super Admin',
+      role: 'ADMIN'
+    }
+  });
+
+  // Academy Admin for footacademy
+  const academy1Password = await bcrypt.hash('academy123', 10);
+  await prisma.user.create({
+    data: {
+      email: 'academy1@footbooking.com',
+      password: academy1Password,
+      name: 'Footacademy Manager',
+      role: 'ACADEMY_ADMIN',
+      academyId: footacademy.id
+    }
+  });
+
+  // Academy Admin for kickoff
+  const academy2Password = await bcrypt.hash('academy123', 10);
+  await prisma.user.create({
+    data: {
+      email: 'academy2@footbooking.com',
+      password: academy2Password,
+      name: 'Kickoff Manager',
+      role: 'ACADEMY_ADMIN',
+      academyId: kickoff.id
+    }
+  });
+
+  // Academy Admin for palmarena
+  const academy3Password = await bcrypt.hash('academy123', 10);
+  await prisma.user.create({
+    data: {
+      email: 'academy3@footbooking.com',
+      password: academy3Password,
+      name: 'Palmarena Manager',
+      role: 'ACADEMY_ADMIN',
+      academyId: palmarena.id
+    }
+  });
+
+  // Academy Admin for masterfoot
+  const academy4Password = await bcrypt.hash('academy123', 10);
+  await prisma.user.create({
+    data: {
+      email: 'academy4@footbooking.com',
+      password: academy4Password,
+      name: 'Masterfoot Manager',
+      role: 'ACADEMY_ADMIN',
+      academyId: masterfoot.id
+    }
+  });
+
+  console.log('Admin users created successfully!');
 }
 
 main()

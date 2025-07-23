@@ -6,6 +6,7 @@ import { AcademyDetailPage } from './pages/AcademyDetailPage';
 import { BookingCalendarPage } from './pages/BookingCalendarPage';
 import { BookingConfirmationPage } from './pages/BookingConfirmationPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AcademyAdminDashboard } from './pages/AcademyAdminDashboard';
 import { AdminLogin } from './pages/AdminLogin';
 import { TournamentsPage } from './pages/TournamentsPage';
 import { BookingProvider } from './contexts/BookingContext';
@@ -28,6 +29,7 @@ function App() {
               <Route path="/tournaments" element={<TournamentsPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/academy/dashboard" element={<AcademyAdminDashboard />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
             </Routes>

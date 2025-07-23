@@ -262,13 +262,13 @@ export const AcademyDetailPage: React.FC = () => {
           
         {/* Tabs for fields */}
         <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 overflow-x-auto">
-          {academy.fields && academy.fields.map((field) => (
+          {academy.fields && academy.fields.map((field, index) => (
             <button
               key={field.id}
               className={`px-3 sm:px-4 py-2 rounded-t-md font-medium border-b-2 transition-colors text-sm sm:text-base whitespace-nowrap ${selectedField && selectedField.id === field.id ? 'border-green-600 text-green-700 bg-white' : 'border-transparent text-gray-600 bg-gray-100 hover:bg-gray-200'}`}
               onClick={() => setSelectedField(field)}
             >
-              {field.type} #{field.id}
+              {field.type} #{index + 1}
             </button>
           ))}
         </div>
@@ -480,23 +480,9 @@ export const AcademyDetailPage: React.FC = () => {
                 <span className="text-gray-900 text-sm sm:text-base">{pendingBooking.customerEmail}</span>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+            <div className="flex justify-center pt-4">
               <button
-                className="flex-1 py-2.5 sm:py-3 px-4 sm:px-6 border-2 border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all duration-200 font-semibold text-sm sm:text-base"
-                onClick={async () => {
-                  await fetch(`${API_URL}/bookings/${pendingBooking.id}`, { method: 'DELETE' });
-                  setPendingBooking(null);
-                  setShowConfirmModal(false);
-                  setForm({ firstName: '', lastName: '', phone: '', email: '' });
-                  fetchBookings();
-                  setError('Booking canceled successfully! ❌');
-                  setShowErrorPopup(true);
-                }}
-              >
-                Cancel Booking
-              </button>
-              <button
-                className="flex-1 py-2.5 sm:py-3 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg text-sm sm:text-base"
+                className="w-full sm:w-auto py-2.5 sm:py-3 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg text-sm sm:text-base"
                 onClick={async () => {
                   try {
                     const response = await fetch(`${API_URL}/send-email`, {

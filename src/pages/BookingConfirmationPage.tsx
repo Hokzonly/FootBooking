@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, Calendar, Clock, MapPin, User, Phone, Mail, QrCode, Download, Share2, ArrowLeft, Shield, CreditCard, XCircle } from 'lucide-react';
+import { CheckCircle, Calendar, Clock, MapPin, User, Phone, Mail, Download, Share2, ArrowLeft, Shield, CreditCard, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { API_URL } from '../config/api';
 
@@ -19,7 +19,7 @@ export const BookingConfirmationPage: React.FC = () => {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showQR, setShowQR] = useState(false);
+
 
   useEffect(() => {
     if (!bookingId) return;
@@ -86,6 +86,8 @@ export const BookingConfirmationPage: React.FC = () => {
       alert('Link copied to clipboard!');
     }
   };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
@@ -194,23 +196,7 @@ export const BookingConfirmationPage: React.FC = () => {
                     <p className="text-sm text-gray-500">Booking ID</p>
                     <p className="font-mono text-lg font-semibold text-gray-900">#{booking.id}</p>
                   </div>
-                  <button
-                    onClick={() => setShowQR(!showQR)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    <QrCode className="h-4 w-4" />
-                    <span>Show QR Code</span>
-                  </button>
                 </div>
-                
-                {showQR && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
-                    <div className="w-32 h-32 bg-white rounded-lg mx-auto flex items-center justify-center border-2 border-dashed border-gray-300">
-                      <QrCode className="h-16 w-16 text-gray-400" />
-                    </div>
-                    <p className="text-sm text-gray-500 mt-2">QR Code for check-in</p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -261,7 +247,7 @@ export const BookingConfirmationPage: React.FC = () => {
                 </div>
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                  <p className="text-sm text-gray-700">Bring your booking confirmation or QR code</p>
+                  <p className="text-sm text-gray-700">Bring your booking confirmation</p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>

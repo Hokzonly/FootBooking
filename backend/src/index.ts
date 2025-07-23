@@ -61,9 +61,48 @@ app.use(cors({
   credentials: true
 }));
 
-app.get('/api/test', (req: Request, res: Response): void => {
-  res.json({ message: 'Server is working!', timestamp: new Date().toISOString() });
-});
+// Role-based middleware functions
+function requireRole(allowedRoles: string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+    
+    if (!allowedRoles.includes(req.user.role)) {
+      res.status(403).json({ error: 'Insufficient permissions' });
+      return;
+    }
+    
+    next();
+  };
+}
+
+// Auth middleware
+function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+  const auth = req.headers.authorization;
+  
+  if (!auth) {
+    res.status(401).json({ error: 'No token provided' });
+    return;
+  }
+  
+  try {
+    const token = auth.split(' ')[1];
+    const payload = jwt.verify(token, JWT_SECRET || 'supersecret') as JwtPayload;
+    req.user = payload;
+    next();
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+// Specific role middleware
+const requireAdmin = requireRole(['ADMIN']);
+const requireAcademyAdmin = requireRole(['ADMIN', 'ACADEMY_ADMIN']);
+const requireUser = requireRole(['ADMIN', 'ACADEMY_ADMIN', 'USER']);
+
+
 
 app.post('/api/submit-play', upload.single('video'), async (req: Request, res: Response): Promise<void> => {
   try {
@@ -148,44 +187,25 @@ app.post('/api/submit-play', upload.single('video'), async (req: Request, res: R
   }
 });
 
-app.post('/api/test-upload', upload.single('video'), async (req: Request, res: Response): Promise<void> => {
-  try {
-    if (!req.file) {
-      res.status(400).json({ error: 'No video file provided' });
-      return;
-    }
 
-    const { title, playerName } = req.body;
-
-    const fileInfo = {
-      id: Date.now(),
-      title: title || 'Amazing Goal from Outside the Box',
-      playerName: playerName || 'Ahmed_Benz',
-      fileName: req.file.originalname,
-      fileSize: req.file.size,
-      uploadedAt: new Date().toISOString(),
-      status: 'APPROVED'
-    };
-
-    res.json({
-      success: true,
-      message: 'Video uploaded successfully for testing!',
-      fileInfo: fileInfo
-    });
-
-  } catch (error) {
-    console.error('Test upload error:', error);
-    res.status(500).json({ 
-      error: 'Failed to upload video',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
 
 app.use(express.json());
 
+// Health check endpoint
 app.get('/', (req: Request, res: Response): void => {
-  res.send('API is running');
+  res.json({ 
+    message: 'FootBooking API is running', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
+app.get('/api/health', (req: Request, res: Response): void => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
 });
 
 // Get all academies with their fields
@@ -216,10 +236,98 @@ app.get('/academies', async (req: Request, res: Response): Promise<void> => {
 // Get all fields
 app.get('/fields', async (req: Request, res: Response): Promise<void> => {
   try {
-    const fields = await prisma.field.findMany();
+    const fields = await prisma.field.findMany({
+      include: { academy: true }
+    });
     res.json(fields);
   } catch {
     res.status(500).json({ error: 'Failed to fetch fields' });
+  }
+});
+
+// Update academy with fields (PUT route must come before GET route)
+app.put('/academies/:id', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    console.log('PUT /academies/:id endpoint called');
+    const { id } = req.params;
+    const { name, location, phone, description, openingHours, monthlyPrice, image, gallery, fields } = req.body;
+    
+    console.log('Updating academy:', id, req.body);
+    
+    if (!name || !location || !phone || !description || !openingHours || !monthlyPrice || !image) {
+      console.log('Missing required fields:', { name, location, phone, description, openingHours, monthlyPrice, image });
+      res.status(400).json({ error: 'Missing required academy fields' });
+      return;
+    }
+    
+    // Update academy
+    const updatedAcademy = await prisma.academy.update({
+      where: { id: Number(id) },
+      data: {
+        name,
+        location,
+        phone,
+        description,
+        openingHours,
+        monthlyPrice: Number(monthlyPrice),
+        image,
+        gallery: gallery || [],
+      }
+    });
+    
+    console.log('Academy updated:', updatedAcademy);
+    
+    // Delete existing fields for this academy
+    await prisma.field.deleteMany({
+      where: { academyId: Number(id) }
+    });
+    
+    // Create new fields for the academy
+    if (fields && fields.length > 0) {
+      for (const field of fields) {
+        await prisma.field.create({
+          data: {
+            type: field.type,
+            capacity: Number(field.capacity),
+            pricePerHour: Number(field.pricePerHour),
+            image: field.image,
+            academyId: Number(id)
+          }
+        });
+      }
+    }
+    
+    // Return the updated academy with fields
+    const academyWithFields = await prisma.academy.findUnique({
+      where: { id: Number(id) },
+      include: { fields: true }
+    });
+    
+    console.log('Academy with fields:', academyWithFields);
+    res.json(academyWithFields);
+  } catch (error) {
+    console.error('Error updating academy:', error);
+    res.status(500).json({ error: 'Failed to update academy', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Get academy by ID
+app.get('/academies/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const academy = await prisma.academy.findUnique({
+      where: { id: Number(id) },
+      include: { fields: true }
+    });
+    
+    if (!academy) {
+      res.status(404).json({ error: 'Academy not found' });
+      return;
+    }
+    
+    res.json(academy);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch academy' });
   }
 });
 
@@ -232,6 +340,33 @@ app.get('/bookings', async (req: Request, res: Response): Promise<void> => {
     res.json(bookings);
   } catch {
     res.status(500).json({ error: 'Failed to fetch bookings' });
+  }
+});
+
+// Get bookings for a specific academy
+app.get('/academies/:academyId/bookings', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { academyId } = req.params;
+    
+    // First get all fields for this academy
+    const academyFields = await prisma.field.findMany({
+      where: { academyId: Number(academyId) },
+      select: { id: true }
+    });
+    
+    const fieldIds = academyFields.map(field => field.id);
+    
+    // Then get all bookings for these fields
+    const bookings = await prisma.booking.findMany({
+      where: {
+        fieldId: { in: fieldIds }
+      },
+      include: { field: true }
+    });
+    
+    res.json(bookings);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch academy bookings' });
   }
 });
 
@@ -252,6 +387,33 @@ app.get('/bookings/:id', async (req: Request, res: Response): Promise<void> => {
     res.json(booking);
   } catch {
     res.status(500).json({ error: 'Failed to fetch booking' });
+  }
+});
+
+// Delete a booking (cancel booking)
+app.delete('/bookings/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    
+    // Check if booking exists
+    const booking = await prisma.booking.findUnique({ 
+      where: { id: Number(id) }
+    });
+    
+    if (!booking) {
+      res.status(404).json({ error: 'Booking not found' });
+      return;
+    }
+    
+    // Delete the booking
+    await prisma.booking.delete({
+      where: { id: Number(id) }
+    });
+    
+    res.json({ message: 'Booking cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    res.status(500).json({ error: 'Failed to cancel booking' });
   }
 });
 
@@ -423,46 +585,7 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
   }
 });
 
-// Role-based middleware functions
-function requireRole(allowedRoles: string[]) {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({ error: 'Authentication required' });
-      return;
-    }
-    
-    if (!allowedRoles.includes(req.user.role)) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
-    
-    next();
-  };
-}
 
-// Specific role middleware
-const requireAdmin = requireRole(['ADMIN']);
-const requireAcademyAdmin = requireRole(['ADMIN', 'ACADEMY_ADMIN']);
-const requireUser = requireRole(['ADMIN', 'ACADEMY_ADMIN', 'USER']);
-
-// Auth middleware
-function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-  const auth = req.headers.authorization;
-  
-  if (!auth) {
-    res.status(401).json({ error: 'No token provided' });
-    return;
-  }
-  
-  try {
-    const token = auth.split(' ')[1];
-    const payload = jwt.verify(token, JWT_SECRET || 'supersecret') as JwtPayload;
-    req.user = payload;
-    next();
-  } catch {
-    res.status(401).json({ error: 'Invalid token' });
-  }
-}
 
 // Get current user (me)
 app.get('/api/auth/me', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -538,17 +661,17 @@ app.get('/api/academy/my-academy', requireAuth, requireAcademyAdmin, async (req:
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
-    
+
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      include: { academy: true }
+      include: { academy: { include: { fields: true } } }
     });
-    
-    if (!user?.academy) {
-      res.status(404).json({ error: 'No academy associated with this user' });
+
+    if (!user || !user.academy) {
+      res.status(404).json({ error: 'Academy not found for this user' });
       return;
     }
-    
+
     res.json(user.academy);
   } catch {
     res.status(500).json({ error: 'Failed to fetch academy' });
@@ -633,42 +756,258 @@ app.put('/api/admin/users/:id/academy', requireAuth, requireAdmin, async (req: A
   }
 });
 
-// Test email service endpoint
-app.post('/test-email', async (req: Request, res: Response): Promise<void> => {
+// Create academy admin user
+app.post('/api/admin/academy-admins', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    // Test the email service directly
-    const testBookingDetails = {
-      bookingId: 999,
-      fieldName: 'Test Field',
-      fieldId: 1,
-      date: 'Test Date',
-      time: 'Test Time',
-      customerName: 'Test User',
-      customerPhone: '+1234567890',
-      customerEmail: 'test@example.com',
-      academyName: 'Test Academy'
-    };
+    const { email, password, name, academyId } = req.body;
     
-    const emailSent = await emailService.sendBookingConfirmation(testBookingDetails);
-    
-    if (emailSent) {
-      res.json({ 
-        success: true, 
-        message: 'Email service test successful',
-        details: 'Email configuration is working correctly'
-      });
-    } else {
-      res.json({ 
-        success: false, 
-        message: 'Email service test failed',
-        details: 'Check the server logs for more details'
-      });
+    if (!email || !password || !name || !academyId) {
+      res.status(400).json({ error: 'Email, password, name, and academyId required' });
+      return;
     }
-  } catch (error) {
-    console.error('Email service test error:', error);
-    res.status(500).json({ error: 'Email service test failed' });
+    
+    // Check if academy exists
+    const academy = await prisma.academy.findUnique({
+      where: { id: Number(academyId) }
+    });
+    
+    if (!academy) {
+      res.status(404).json({ error: 'Academy not found' });
+      return;
+    }
+    
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (existingUser) {
+      res.status(409).json({ error: 'Email already in use' });
+      return;
+    }
+    
+    const hash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hash,
+        name,
+        role: 'ACADEMY_ADMIN',
+        academyId: Number(academyId)
+      },
+      include: { academy: true }
+    });
+    
+    res.json({ 
+      id: user.id, 
+      email: user.email, 
+      name: user.name, 
+      role: user.role,
+      academy: user.academy
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to create academy admin' });
   }
 });
+
+// Get all academy admins
+app.get('/api/admin/academy-admins', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    console.log('Fetching academy admins for user:', req.user);
+    
+    const academyAdmins = await prisma.user.findMany({
+      where: { role: 'ACADEMY_ADMIN' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        academy: {
+          select: {
+            id: true,
+            name: true,
+            location: true
+          }
+        },
+        createdAt: true
+      }
+    });
+    
+    console.log('Found academy admins:', academyAdmins.length);
+    res.json(academyAdmins);
+  } catch (error) {
+    console.error('Error fetching academy admins:', error);
+    res.status(500).json({ error: 'Failed to fetch academy admins' });
+  }
+});
+
+// Update academy admin
+app.put('/api/admin/academy-admins/:id', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { email, name, academyId, password } = req.body;
+    
+    if (!email || !name || !academyId) {
+      res.status(400).json({ error: 'Email, name, and academyId required' });
+      return;
+    }
+    
+    // Check if academy exists
+    const academy = await prisma.academy.findUnique({
+      where: { id: Number(academyId) }
+    });
+    
+    if (!academy) {
+      res.status(404).json({ error: 'Academy not found' });
+      return;
+    }
+    
+    // Check if email already exists for another user
+    const existingUser = await prisma.user.findFirst({
+      where: { 
+        email,
+        id: { not: Number(id) }
+      }
+    });
+    
+    if (existingUser) {
+      res.status(409).json({ error: 'Email already in use by another user' });
+      return;
+    }
+    
+    // Prepare update data
+    const updateData: any = {
+      email,
+      name,
+      academyId: Number(academyId)
+    };
+    
+    // Only update password if provided
+    if (password) {
+      const hash = await bcrypt.hash(password, 10);
+      updateData.password = hash;
+    }
+    
+    const user = await prisma.user.update({
+      where: { id: Number(id) },
+      data: updateData,
+      include: { academy: true }
+    });
+    
+    res.json({ 
+      id: user.id, 
+      email: user.email, 
+      name: user.name, 
+      role: user.role,
+      academy: user.academy
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to update academy admin' });
+  }
+});
+
+// Delete academy admin
+app.delete('/api/admin/academy-admins/:id', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    
+    // Check if user exists and is an academy admin
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) }
+    });
+    
+    if (!user) {
+      res.status(404).json({ error: 'Academy admin not found' });
+      return;
+    }
+    
+    if (user.role !== 'ACADEMY_ADMIN') {
+      res.status(400).json({ error: 'User is not an academy admin' });
+      return;
+    }
+    
+    // Delete the user
+    await prisma.user.delete({
+      where: { id: Number(id) }
+    });
+    
+    res.json({ message: 'Academy admin deleted successfully' });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete academy admin' });
+  }
+});
+
+// Create academy with fields
+app.post('/academies', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+
+    
+    const { name, location, phone, description, openingHours, monthlyPrice, image, gallery, fields } = req.body;
+    
+    // Check for required fields and provide specific error messages
+    const missingFields = [];
+    if (!name || name.trim() === '') missingFields.push('name');
+    if (!location || location.trim() === '') missingFields.push('location');
+    if (!phone || phone.trim() === '') missingFields.push('phone');
+    if (!description || description.trim() === '') missingFields.push('description');
+    if (!openingHours || openingHours.trim() === '') missingFields.push('openingHours');
+    if (!monthlyPrice || monthlyPrice === 0 || monthlyPrice <= 0) missingFields.push('monthlyPrice');
+    if (!image || image.trim() === '') missingFields.push('image');
+    
+    if (missingFields.length > 0) {
+      res.status(400).json({ 
+        error: 'Missing required academy fields', 
+        missingFields: missingFields
+      });
+      return;
+    }
+    
+    // Create academy
+    const academy = await prisma.academy.create({
+      data: {
+        name,
+        location,
+        phone,
+        description,
+        openingHours,
+        monthlyPrice: Number(monthlyPrice),
+        image,
+        gallery: gallery || [],
+        rating: 4.5, // Default rating
+      }
+    });
+    
+    // Create fields for the academy
+    if (fields && fields.length > 0) {
+      for (const field of fields) {
+        await prisma.field.create({
+          data: {
+            type: field.type,
+            capacity: Number(field.capacity),
+            pricePerHour: Number(field.pricePerHour),
+            image: field.image,
+            academyId: academy.id
+          }
+        });
+      }
+    }
+    
+    // Return the created academy with fields
+    const academyWithFields = await prisma.academy.findUnique({
+      where: { id: academy.id },
+      include: { fields: true }
+    });
+    
+    res.json(academyWithFields);
+  } catch (error) {
+    console.error('Error creating academy:', error);
+    res.status(500).json({ error: 'Failed to create academy', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+
+
+
 
 // Send email confirmation endpoint
 app.post('/send-email', async (req: Request, res: Response): Promise<void> => {
@@ -706,30 +1045,7 @@ app.post('/send-email', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// Test Google Drive connection
-app.get('/api/test-drive', async (req: Request, res: Response): Promise<void> => {
-  try {
-    // Test if we can list files in the folder
-    const response = await drive.files.list({
-      pageSize: 1,
-      fields: 'files(id, name)',
-      q: `'${process.env.GOOGLE_DRIVE_FOLDER_ID || '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'}' in parents`
-    });
 
-    res.json({
-      success: true,
-      message: 'Google Drive connection successful',
-      filesFound: response.data.files?.length || 0
-    });
-  } catch (error) {
-    console.error('Google Drive test error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Google Drive connection failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

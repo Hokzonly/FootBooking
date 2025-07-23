@@ -5,9 +5,9 @@ import { API_URL } from '../config/api';
 interface BookingContextType {
   bookings: Booking[];
   createBooking: (bookingData: Omit<Booking, 'id'>) => Promise<Booking>;
+  cancelBooking: (bookingId: string) => Promise<void>;
   getBooking: (id: string) => Booking | undefined;
   getAllBookings: () => Booking[];
-  cancelBooking: (id: string) => void;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -81,16 +81,32 @@ export const BookingProvider: React.FC<BookingProviderProps> = ({ children }) =>
     }
   };
 
+  const cancelBooking = async (bookingId: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_URL}/bookings/${bookingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel booking');
+      }
+
+      // Remove the booking from local state
+      setBookings(prev => prev.filter(booking => booking.id !== bookingId));
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const getBooking = (id: string): Booking | undefined => {
     return bookings.find(booking => booking.id === id);
   };
 
   const getAllBookings = (): Booking[] => {
     return bookings;
-  };
-
-  const cancelBooking = (id: string): void => {
-    setBookings(prev => prev.filter(booking => booking.id !== id));
   };
 
   return (

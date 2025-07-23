@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Calendar, Clock, User, Phone } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { useBookingContext } from '../contexts/BookingContext';
@@ -10,6 +10,7 @@ import { API_URL } from '../config/api';
 export const BookingCalendarPage: React.FC = () => {
   const { academyId, fieldId } = useParams<{ academyId: string; fieldId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { createBooking } = useBookingContext();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -22,6 +23,65 @@ export const BookingCalendarPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Check if we're returning from a cancellation
+  const isReturningFromCancellation = location.search.includes('refresh=true');
+
+  // Force refresh if returning from cancellation
+  useEffect(() => {
+    if (isReturningFromCancellation && fieldId) {
+      setRefreshing(true);
+      fetch(`${API_URL}/bookings`)
+        .then(res => res.json())
+        .then(data => {
+          setBookings(data.filter((b: Booking) => String(b.fieldId) === String(fieldId)));
+          setRefreshing(false);
+          // Remove the refresh parameter from URL
+          navigate(location.pathname, { replace: true });
+        })
+        .catch(() => {
+          setRefreshing(false);
+        });
+    }
+  }, [isReturningFromCancellation, fieldId, navigate, location.pathname]);
+
+  // Check for booking cancellation flag
+  useEffect(() => {
+    const bookingCancelled = localStorage.getItem('bookingCancelled');
+    if (bookingCancelled === 'true' && fieldId) {
+      setRefreshing(true);
+      fetch(`${API_URL}/bookings`)
+        .then(res => res.json())
+        .then(data => {
+          setBookings(data.filter((b: Booking) => String(b.fieldId) === String(fieldId)));
+          setRefreshing(false);
+          // Clear the flag
+          localStorage.removeItem('bookingCancelled');
+        })
+        .catch(() => {
+          setRefreshing(false);
+        });
+    }
+  }, [fieldId]);
+
+  // Periodic refresh to keep calendar up to date
+  useEffect(() => {
+    if (!fieldId) return;
+    
+    const interval = setInterval(() => {
+      fetch(`${API_URL}/bookings`)
+        .then(res => res.json())
+        .then(data => {
+          setBookings(data.filter((b: Booking) => String(b.fieldId) === String(fieldId)));
+        })
+        .catch(() => {
+          // Silent fail for periodic refresh
+        });
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [fieldId]);
 
   useEffect(() => {
     // Fetch academies and set current academy/field
@@ -45,6 +105,60 @@ export const BookingCalendarPage: React.FC = () => {
         setLoading(false);
       });
   }, [fieldId]);
+
+  // Refresh bookings when currentDate changes (when user navigates weeks)
+  useEffect(() => {
+    if (!fieldId) return;
+    fetch(`${API_URL}/bookings`)
+      .then(res => res.json())
+      .then(data => {
+        setBookings(data.filter((b: Booking) => String(b.fieldId) === String(fieldId)));
+      });
+  }, [fieldId, currentDate]);
+
+  // Refresh bookings when user returns to the page (e.g., after cancelling a booking)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (!fieldId) return;
+      fetch(`${API_URL}/bookings`)
+        .then(res => res.json())
+        .then(data => {
+          setBookings(data.filter((b: Booking) => String(b.fieldId) === String(fieldId)));
+        });
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && fieldId) {
+        fetch(`${API_URL}/bookings`)
+          .then(res => res.json())
+          .then(data => {
+            setBookings(data.filter((b: Booking) => String(b.fieldId) === String(fieldId)));
+          });
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fieldId]);
+
+  const refreshBookings = () => {
+    if (!fieldId) return;
+    setRefreshing(true);
+    fetch(`${API_URL}/bookings`)
+      .then(res => res.json())
+      .then(data => {
+        setBookings(data.filter((b: Booking) => String(b.fieldId) === String(fieldId)));
+        setRefreshing(false);
+      })
+      .catch(() => {
+        setRefreshing(false);
+      });
+  };
 
   if (!academy || !field || loading) {
     return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">Loading...</div>;
@@ -113,7 +227,9 @@ export const BookingCalendarPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Book {field.type}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Book {field.type} #{academy.fields.findIndex(f => f.id === field.id) + 1}
+        </h1>
         <p className="text-lg text-gray-600">{academy.name}</p>
       </div>
 
@@ -135,6 +251,18 @@ export const BookingCalendarPage: React.FC = () => {
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ChevronRight className="h-5 w-5" />
+            </button>
+            <button
+              onClick={refreshBookings}
+              disabled={refreshing}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-sm disabled:opacity-50"
+              title="Refresh availability"
+            >
+              {refreshing ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+              ) : (
+                '↻'
+              )}
             </button>
           </div>
         </div>
@@ -195,6 +323,11 @@ export const BookingCalendarPage: React.FC = () => {
             <div className="w-4 h-4 bg-red-100 rounded mr-2"></div>
             <span className="text-gray-700">Booked</span>
           </div>
+        </div>
+        <div className="mt-3 pt-3 border-t border-blue-200">
+          <p className="text-xs text-blue-700">
+            💡 <strong>Tip:</strong> If you've just cancelled a booking, click the refresh button (↻) to see updated availability.
+          </p>
         </div>
       </div>
 

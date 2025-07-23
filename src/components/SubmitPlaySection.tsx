@@ -87,7 +87,7 @@ export const SubmitPlaySection: React.FC<SubmitPlaySectionProps> = ({ className 
       formData.append('date', new Date().toISOString().split('T')[0]);
       formData.append('filename', formatFileName(selectedFile));
 
-      const response = await fetch(`${API_URL}/api/test-upload`, {
+      const response = await fetch(`${API_URL}/api/submit-play`, {
         method: 'POST',
         body: formData
       });
