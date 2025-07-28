@@ -21,19 +21,9 @@ export default function RegisterPage() {
         return;
       }
       if (res.ok) {
-        // Optionally, auto-login after registration
-        const loginRes = await fetch(`${API_URL}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        const loginData = await loginRes.json();
-        if (loginRes.ok) {
-          localStorage.setItem("token", loginData.token);
-          window.location.href = "/";
-        } else {
-          setError(loginData.error || "Registration succeeded, but login failed");
-        }
+        // Show success message about email verification
+        alert(data.message || "Registration successful! Please check your email to verify your account.");
+        window.location.href = "/login";
       } else {
         setError(data.error || "Registration failed");
       }

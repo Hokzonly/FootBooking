@@ -20,16 +20,21 @@ enum UserRole {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  role      UserRole @default(USER)
-  academy   Academy? @relation("AcademyAdmin", fields: [academyId], references: [id])
-  academyId Int?     @unique
-  bookings  Booking[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  password          String
+  name              String?
+  role              UserRole @default(USER)
+  academy           Academy? @relation("AcademyAdmin", fields: [academyId], references: [id])
+  academyId         Int?     @unique
+  isEmailVerified   Boolean  @default(false)
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  bookings          Booking[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Academy {

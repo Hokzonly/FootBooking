@@ -16,7 +16,12 @@ export default function LoginPage() {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("userInfo", JSON.stringify(data.user));
         window.location.href = "/";
+      } else if (res.status === 403 && data.needsVerification) {
+        // Handle email verification requirement
+        setError(`Please verify your email before logging in. Check your inbox for ${data.email} or click "Resend Verification" below.`);
+        // You could add a resend verification button here
       } else {
         setError(data.error || "Login failed");
       }

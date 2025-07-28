@@ -111,6 +111,8 @@ export const AdminDashboard: React.FC = () => {
     activeAcademies: 0
   });
 
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+
   // Define fetch functions first
   const fetchAcademies = async () => {
     try {
@@ -159,8 +161,11 @@ export const AdminDashboard: React.FC = () => {
   const fetchAcademyBookings = async () => {
     if (!userAcademyId) return;
     try {
+      console.log('Fetching bookings for academy ID:', userAcademyId);
       const response = await fetch(`${API_URL}/academies/${userAcademyId}/bookings`);
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Bookings data:', data);
       setBookings(data);
     } catch (error) {
       console.error('Error fetching academy bookings:', error);
@@ -194,6 +199,84 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchRecentActivities = async () => {
+    try {
+      const [academiesRes, bookingsRes, academyAdminsRes] = await Promise.all([
+        fetch(`${API_URL}/academies`),
+        fetch(`${API_URL}/bookings`),
+        fetch(`${API_URL}/api/admin/academy-admins`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        })
+      ]);
+      
+      const academies = await academiesRes.json();
+      const bookings = await bookingsRes.json();
+      const academyAdmins = academyAdminsRes.ok ? await academyAdminsRes.json() : [];
+      
+      const activities = [];
+      
+      // Add recent academies
+      const recentAcademies = academies
+        .sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        .slice(0, 3);
+      
+      recentAcademies.forEach((academy: any) => {
+        activities.push({
+          id: `academy-${academy.id}`,
+          type: 'academy_created',
+          title: `New academy created: ${academy.name}`,
+          description: academy.location,
+          timestamp: academy.createdAt || new Date().toISOString(),
+          color: 'green'
+        });
+      });
+      
+      // Add recent bookings
+      const recentBookings = bookings
+        .sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        .slice(0, 3);
+      
+      recentBookings.forEach((booking: any) => {
+        const academy = academies.find((a: any) => a.id === booking.academyId);
+        activities.push({
+          id: `booking-${booking.id}`,
+          type: 'booking_created',
+          title: `New booking at ${academy?.name || 'Unknown Academy'}`,
+          description: `${booking.customerName} - ${booking.time}`,
+          timestamp: booking.createdAt || new Date().toISOString(),
+          color: 'blue'
+        });
+      });
+      
+      // Add recent academy admins
+      const recentAdmins = academyAdmins
+        .sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        .slice(0, 3);
+      
+      recentAdmins.forEach((admin: any) => {
+        activities.push({
+          id: `admin-${admin.id}`,
+          type: 'admin_created',
+          title: `Academy admin created: ${admin.email}`,
+          description: admin.academy?.name || 'No academy assigned',
+          timestamp: admin.createdAt || new Date().toISOString(),
+          color: 'purple'
+        });
+      });
+      
+      // Sort all activities by timestamp and take the most recent 5
+      const sortedActivities = activities
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 5);
+      
+      setRecentActivities(sortedActivities);
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     const userInfo = localStorage.getItem('userInfo');
@@ -207,6 +290,12 @@ export const AdminDashboard: React.FC = () => {
       const user = JSON.parse(userInfo);
       setUserRole(user.role);
       setUserAcademyId(user.academyId);
+      
+      // Redirect academy admins to their specific dashboard
+      if (user.role === 'ACADEMY_ADMIN') {
+        navigate('/academy/dashboard');
+        return;
+      }
     }
 
     // Fetch data based on user role
@@ -217,6 +306,7 @@ export const AdminDashboard: React.FC = () => {
       fetchFields();
       fetchSystemStats();
       fetchAcademyAdmins(); // Fetch academy admins for super admin
+      fetchRecentActivities(); // Fetch recent activities for super admin
     } else if (userRole === 'ACADEMY_ADMIN' && userAcademyId) {
       // Academy admin - fetch only their academy data
       fetchMyAcademy();
@@ -273,6 +363,7 @@ export const AdminDashboard: React.FC = () => {
       setShowAcademyAdminForm(false);
       setAcademyAdminForm({ email: '', password: '', name: '', academyId: '' });
       fetchAcademyAdmins(); // Refresh the list
+      fetchRecentActivities(); // Refresh recent activities
     } catch (error) {
       console.error('Create academy admin error:', error);
       alert(`Failed to create academy admin: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -349,6 +440,7 @@ export const AdminDashboard: React.FC = () => {
       setEditingAcademyAdmin(null);
       setEditAcademyAdminForm({ email: '', password: '', name: '', academyId: '' });
       fetchAcademyAdmins(); // Refresh the list
+      fetchRecentActivities(); // Refresh recent activities
     } catch (error) {
       console.error('Update academy admin error:', error);
       alert('Failed to update academy admin. Please try again.');
@@ -373,6 +465,7 @@ export const AdminDashboard: React.FC = () => {
 
       alert('Academy admin deleted successfully!');
       fetchAcademyAdmins(); // Refresh the list
+      fetchRecentActivities(); // Refresh recent activities
     } catch (error) {
       console.error('Delete academy admin error:', error);
       alert('Failed to delete academy admin. Please try again.');
@@ -447,6 +540,7 @@ export const AdminDashboard: React.FC = () => {
         fields: []
       });
       fetchAcademies(); // Refresh academies list
+      fetchRecentActivities(); // Refresh recent activities
     } catch (error) {
       console.error('Create academy error:', error);
       alert(`Failed to create academy: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -561,6 +655,7 @@ export const AdminDashboard: React.FC = () => {
       setShowEditModal(false);
       setSelectedAcademy(null);
       fetchAcademies(); // Refresh academies list
+      fetchRecentActivities(); // Refresh recent activities
     } catch (error) {
       console.error('Update academy error:', error);
       alert(`Failed to update academy: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -811,21 +906,26 @@ export const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
             <div className="space-y-3">
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <p className="text-sm text-gray-700">New academy created: Masterfoot</p>
-                <span className="text-xs text-gray-500">2 minutes ago</span>
-              </div>
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <p className="text-sm text-gray-700">Academy admin created: academy1@footbooking.com</p>
-                <span className="text-xs text-gray-500">15 minutes ago</span>
-              </div>
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <p className="text-sm text-gray-700">New booking at Footacademy</p>
-                <span className="text-xs text-gray-500">1 hour ago</span>
-              </div>
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`w-2 h-2 bg-${activity.color}-500 rounded-full`}></div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-700">{activity.title}</p>
+                      {activity.description && (
+                        <p className="text-xs text-gray-500">{activity.description}</p>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(activity.timestamp).toLocaleDateString()} {new Date(activity.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <p>No recent activities</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

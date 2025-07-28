@@ -56,7 +56,9 @@ app.use(cors({
     'https://foot-booking.vercel.app',
     'https://foot-booking-esbfq20a8-hokzs-projects.vercel.app',
     'https://foot-booking-gv4nhcrs1-hokzs-projects.vercel.app',
-    'https://foot-booking-p7vr4zbgk-hokzs-projects.vercel.app'
+    'https://foot-booking-p7vr4zbgk-hokzs-projects.vercel.app',
+    'null', // Allow file:// URLs for testing
+    '*' // Allow all origins for development
   ],
   credentials: true
 }));
@@ -99,7 +101,7 @@ function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunctio
 
 // Specific role middleware
 const requireAdmin = requireRole(['ADMIN']);
-const requireAcademyAdmin = requireRole(['ADMIN', 'ACADEMY_ADMIN']);
+const requireAcademyAdmin = requireRole(['ACADEMY_ADMIN']);
 const requireUser = requireRole(['ADMIN', 'ACADEMY_ADMIN', 'USER']);
 
 
@@ -200,6 +202,8 @@ app.get('/', (req: Request, res: Response): void => {
   });
 });
 
+
+
 app.get('/api/health', (req: Request, res: Response): void => {
   res.json({ 
     status: 'healthy', 
@@ -248,14 +252,10 @@ app.get('/fields', async (req: Request, res: Response): Promise<void> => {
 // Update academy with fields (PUT route must come before GET route)
 app.put('/academies/:id', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    console.log('PUT /academies/:id endpoint called');
     const { id } = req.params;
     const { name, location, phone, description, openingHours, monthlyPrice, image, gallery, fields } = req.body;
     
-    console.log('Updating academy:', id, req.body);
-    
     if (!name || !location || !phone || !description || !openingHours || !monthlyPrice || !image) {
-      console.log('Missing required fields:', { name, location, phone, description, openingHours, monthlyPrice, image });
       res.status(400).json({ error: 'Missing required academy fields' });
       return;
     }
@@ -274,8 +274,6 @@ app.put('/academies/:id', requireAuth, requireAdmin, async (req: AuthenticatedRe
         gallery: gallery || [],
       }
     });
-    
-    console.log('Academy updated:', updatedAcademy);
     
     // Delete existing fields for this academy
     await prisma.field.deleteMany({
@@ -303,7 +301,6 @@ app.put('/academies/:id', requireAuth, requireAdmin, async (req: AuthenticatedRe
       include: { fields: true }
     });
     
-    console.log('Academy with fields:', academyWithFields);
     res.json(academyWithFields);
   } catch (error) {
     console.error('Error updating academy:', error);
@@ -365,7 +362,8 @@ app.get('/academies/:academyId/bookings', async (req: Request, res: Response): P
     });
     
     res.json(bookings);
-  } catch {
+  } catch (error) {
+    console.error('Error fetching academy bookings:', error);
     res.status(500).json({ error: 'Failed to fetch academy bookings' });
   }
 });
@@ -422,6 +420,7 @@ function toDateOnly(dateString: string): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+// Public booking endpoint (for non-registered users)
 app.post('/bookings', async (req: Request, res: Response): Promise<void> => {
   try {
     const { fieldId, date, time, customerName, customerPhone, customerEmail } = req.body;
@@ -484,6 +483,92 @@ app.post('/bookings', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// Authenticated booking endpoint (requires email verification)
+app.post('/api/bookings', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+    
+    const { fieldId, date, time, customerName, customerPhone, customerEmail } = req.body;
+    
+    if (!fieldId || !date || !time || !customerName || !customerPhone || !customerEmail) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+    
+    // Get user and check email verification
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) {
+      res.status(401).json({ error: 'User not found' });
+      return;
+    }
+    
+    // Check email verification for regular users
+    if (user.role === 'USER' && !user.isEmailVerified) {
+      res.status(403).json({ 
+        error: 'Please verify your email before booking a field',
+        needsVerification: true,
+        email: user.email
+      });
+      return;
+    }
+    
+    // Rate limit: max 1 booking per user per day
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const todaysBookings = await prisma.booking.findMany({
+      where: {
+        userId: req.user.userId,
+        createdAt: { 
+          gte: today,
+          lt: tomorrow
+        }
+      }
+    });
+    
+    if (todaysBookings.length >= 1) {
+      res.status(429).json({ 
+        error: 'You can only book one game per day. Please try again tomorrow.' 
+      });
+      return;
+    }
+    
+    const dateOnly = toDateOnly(date);
+    
+    // Check for existing booking
+    const existing = await prisma.booking.findFirst({
+      where: { fieldId, date: dateOnly, time }
+    });
+    
+    if (existing) {
+      res.status(409).json({ error: 'This slot is already booked' });
+      return;
+    }
+    
+    const booking = await prisma.booking.create({
+      data: {
+        fieldId,
+        date: dateOnly,
+        time,
+        customerName,
+        customerPhone,
+        customerEmail,
+        userId: req.user.userId
+      },
+      include: { field: true }
+    });
+    
+    res.status(201).json(booking);
+  } catch {
+    res.status(500).json({ error: 'Failed to create booking' });
+  }
+});
+
 // Get availability for a specific field on a specific date
 app.get('/fields/:fieldId/availability', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -533,19 +618,165 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
       return;
     }
     
+    // Generate verification token
+    const verificationToken = require('crypto').randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
     const hash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, password: hash, name, role: role as 'USER' | 'ACADEMY_ADMIN' | 'ADMIN' }
+      data: { 
+        email, 
+        password: hash, 
+        name, 
+        role: role as 'USER' | 'ACADEMY_ADMIN' | 'ADMIN',
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires,
+        isEmailVerified: false
+      }
     });
+    
+    // Send verification email
+    try {
+      await emailService.sendEmailVerification({
+        email: user.email,
+        name: user.name || 'User',
+        verificationToken: verificationToken
+      });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail registration if email fails
+    }
     
     res.json({ 
       id: user.id, 
       email: user.email, 
       name: user.name, 
-      role: user.role 
+      role: user.role,
+      message: 'Registration successful! Please check your email to verify your account.'
     });
   } catch {
     res.status(500).json({ error: 'Failed to register user' });
+  }
+});
+
+// Email verification endpoint
+app.get('/api/auth/verify-email', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.query;
+    
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({ error: 'Verification token required' });
+      return;
+    }
+    
+    // First check if user exists with this token
+    const user = await prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationExpires: {
+          gt: new Date()
+        }
+      }
+    });
+    
+    if (!user) {
+      // Check if user is already verified (token might be expired but email is verified)
+      const verifiedUser = await prisma.user.findFirst({
+        where: {
+          emailVerificationToken: token
+        }
+      });
+      
+      if (verifiedUser && verifiedUser.isEmailVerified) {
+        res.json({ 
+          message: 'Email is already verified! You can now book football fields.',
+          user: {
+            id: verifiedUser.id,
+            email: verifiedUser.email,
+            name: verifiedUser.name,
+            role: verifiedUser.role
+          }
+        });
+        return;
+      }
+      
+      res.status(400).json({ error: 'Invalid or expired verification token' });
+      return;
+    }
+    
+    // Mark email as verified
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isEmailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null
+      }
+    });
+    
+    res.json({ 
+      message: 'Email verified successfully! You can now book football fields.',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to verify email' });
+  }
+});
+
+// Resend verification email endpoint
+app.post('/api/auth/resend-verification', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      res.status(400).json({ error: 'Email required' });
+      return;
+    }
+    
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    
+    if (user.isEmailVerified) {
+      res.status(400).json({ error: 'Email is already verified' });
+      return;
+    }
+    
+    // Generate new verification token
+    const verificationToken = require('crypto').randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires
+      }
+    });
+    
+    // Send verification email
+    try {
+      await emailService.sendEmailVerification({
+        email: user.email,
+        name: user.name || 'User',
+        verificationToken: verificationToken
+      });
+      
+      res.json({ message: 'Verification email sent successfully!' });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      res.status(500).json({ error: 'Failed to send verification email' });
+    }
+  } catch {
+    res.status(500).json({ error: 'Failed to resend verification email' });
   }
 });
 
@@ -565,23 +796,147 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
       return;
     }
     
+    // Check email verification for regular users
+    if (user.role === 'USER' && !user.isEmailVerified) {
+      res.status(403).json({ 
+        error: 'Please verify your email before logging in',
+        needsVerification: true,
+        email: user.email
+      });
+      return;
+    }
+    
     const token = jwt.sign(
       { userId: user.id, role: user.role }, 
       JWT_SECRET || 'supersecret', 
       { expiresIn: '1d' }
     );
     
+    // Get academy info if user is an academy admin
+    let academyInfo = null;
+    if (user.role === 'ACADEMY_ADMIN' && user.academyId) {
+      const academy = await prisma.academy.findUnique({
+        where: { id: user.academyId }
+      });
+      academyInfo = academy;
+    }
+
     res.json({ 
       token, 
       user: { 
         id: user.id, 
         email: user.email, 
         name: user.name, 
-        role: user.role 
+        role: user.role,
+        academyId: user.academyId,
+        academy: academyInfo,
+        isEmailVerified: user.isEmailVerified
       } 
     });
   } catch {
     res.status(500).json({ error: 'Failed to login' });
+  }
+});
+
+// Request password reset endpoint
+app.post('/api/auth/forgot-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      res.status(400).json({ error: 'Email required' });
+      return;
+    }
+    
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+      return;
+    }
+    
+    // Generate reset token
+    const resetToken = require('crypto').randomBytes(32).toString('hex');
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: resetToken,
+        passwordResetExpires: resetExpires
+      }
+    });
+    
+    // Send password reset email
+    try {
+      await emailService.sendPasswordReset({
+        email: user.email,
+        name: user.name || 'User',
+        resetToken: resetToken
+      });
+      
+      res.json({ message: 'Password reset link sent to your email.' });
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      console.error('Email service error details:', {
+        userEmail: user.email,
+        resetToken: resetToken,
+        frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+        mailerSendApiKey: process.env.MAILERSEND_API_KEY ? 'Set' : 'Not set',
+        mailerSendFromEmail: process.env.MAILERSEND_FROM_EMAIL || 'booking@test-r9084zvd7mjgw63d.mlsender.net'
+      });
+      res.status(500).json({ error: 'Failed to send password reset email' });
+    }
+  } catch {
+    res.status(500).json({ error: 'Failed to process password reset request' });
+  }
+});
+
+// Reset password endpoint
+app.post('/api/auth/reset-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      res.status(400).json({ error: 'Token and new password required' });
+      return;
+    }
+    
+    if (password.length < 8) {
+      res.status(400).json({ error: 'Password must be at least 8 characters long' });
+      return;
+    }
+    
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpires: {
+          gt: new Date()
+        }
+      }
+    });
+    
+    if (!user) {
+      res.status(400).json({ error: 'Invalid or expired reset token' });
+      return;
+    }
+    
+    // Hash new password and clear reset token
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null
+      }
+    });
+    
+    res.json({ message: 'Password reset successfully. You can now login with your new password.' });
+  } catch {
+    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 
@@ -673,7 +1028,8 @@ app.get('/api/academy/my-academy', requireAuth, requireAcademyAdmin, async (req:
     }
 
     res.json(user.academy);
-  } catch {
+  } catch (error) {
+    console.error('Error in my-academy endpoint:', error);
     res.status(500).json({ error: 'Failed to fetch academy' });
   }
 });
@@ -813,8 +1169,6 @@ app.post('/api/admin/academy-admins', requireAuth, requireAdmin, async (req: Aut
 // Get all academy admins
 app.get('/api/admin/academy-admins', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    console.log('Fetching academy admins for user:', req.user);
-    
     const academyAdmins = await prisma.user.findMany({
       where: { role: 'ACADEMY_ADMIN' },
       select: {
@@ -833,7 +1187,6 @@ app.get('/api/admin/academy-admins', requireAuth, requireAdmin, async (req: Auth
       }
     });
     
-    console.log('Found academy admins:', academyAdmins.length);
     res.json(academyAdmins);
   } catch (error) {
     console.error('Error fetching academy admins:', error);
@@ -1045,6 +1398,33 @@ app.post('/send-email', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// Check email verification status
+app.get('/api/auth/check-verification', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.query;
+    
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ error: 'Email parameter required' });
+      return;
+    }
+    
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    
+    res.json({
+      email: user.email,
+      isEmailVerified: user.isEmailVerified,
+      hasVerificationToken: !!user.emailVerificationToken,
+      verificationExpires: user.emailVerificationExpires
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to check verification status' });
+  }
+});
 
 
 app.listen(PORT, () => {

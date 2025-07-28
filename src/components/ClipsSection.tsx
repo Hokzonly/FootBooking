@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Play, Eye, Heart, MessageCircle } from 'lucide-react';
 import styled from 'styled-components';
+import { SoccerPlayerIcon } from './SoccerPlayerIcon';
+import { AthleticFigureIcon } from './AthleticFigureIcon';
 
 
 
@@ -96,61 +98,94 @@ export const ClipsSection: React.FC<ClipsSectionProps> = ({ className = "" }) =>
           className="mb-8"
         >
           {featuredClip && (
-            <div className="flex flex-col items-center">
-              <PhoneFrame>
-                <div className="screen">
-                  {featuredClip.videoUrl.includes('youtube.com') ? (
-                    <iframe
-                      className="w-full h-full"
-                      src={getYouTubeEmbedUrl(featuredClip.videoUrl)}
-                      title={featuredClip.title}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <video
-                      className="w-full h-full object-cover"
-                      muted
-                      loop
-                      autoPlay
-                      playsInline
-                      src={featuredClip.videoUrl}
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                  )}
-                  {!featuredClip.videoUrl.includes('youtube.com') && (
-                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                      <Play className="w-12 h-12 text-white opacity-80" />
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              {/* Left Side - Soccer Player */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="hidden lg:flex flex-col items-center"
+              >
+                <SoccerPlayerIcon 
+                  size={160} 
+                  className="drop-shadow-lg hover:scale-105 transition-transform duration-300"
+                />
+              
+              </motion.div>
+
+              {/* Center - Video Content */}
+              <div className="flex flex-col items-center flex-1">
+                <PhoneFrame>
+                  <div className="screen">
+                    {featuredClip.videoUrl.includes('youtube.com') ? (
+                      <iframe
+                        className="w-full h-full"
+                        src={getYouTubeEmbedUrl(featuredClip.videoUrl)}
+                        title={featuredClip.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        className="w-full h-full object-cover"
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                        src={featuredClip.videoUrl}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                    {!featuredClip.videoUrl.includes('youtube.com') && (
+                      <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                        <Play className="w-12 h-12 text-white opacity-80" />
+                      </div>
+                    )}
+                  </div>
+                </PhoneFrame>
+
+                <div className="mt-6 text-center max-w-md">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {featuredClip.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Submitted by <span className="font-semibold">{featuredClip.playerName}</span>
+                  </p>
+
+                  <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+                    <div className="flex items-center">
+                      <Eye className="w-4 h-4 mr-1" />
+                      {featuredClip.views.toLocaleString()}
                     </div>
-                  )}
-                </div>
-              </PhoneFrame>
-
-              <div className="mt-6 text-center max-w-md">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {featuredClip.title}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Submitted by <span className="font-semibold">{featuredClip.playerName}</span>
-                </p>
-
-                <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <Eye className="w-4 h-4 mr-1" />
-                    {featuredClip.views.toLocaleString()}
-                  </div>
-                  <div className="flex items-center">
-                    <Heart className="w-4 h-4 mr-1" />
-                    {featuredClip.likes}
-                  </div>
-                  <div className="flex items-center">
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    {featuredClip.comments || 0}
+                    <div className="flex items-center">
+                      <Heart className="w-4 h-4 mr-1" />
+                      {featuredClip.likes}
+                    </div>
+                    <div className="flex items-center">
+                      <MessageCircle className="w-4 h-4 mr-1" />
+                      {featuredClip.comments || 0}
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Right Side - Athletic Figure */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                viewport={{ once: true }}
+                className="hidden lg:flex flex-col items-center"
+              >
+                <AthleticFigureIcon 
+                  size={160} 
+                  className="drop-shadow-lg hover:scale-105 transition-transform duration-300"
+                />
+              
+              </motion.div>
             </div>
           )}
         </motion.div>

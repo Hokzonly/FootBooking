@@ -61,20 +61,30 @@ export const AcademyAdminDashboard: React.FC = () => {
         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
       }
     })
-    .then(res => res.json())
+    .then(res => {
+      console.log('My academy response status:', res.status);
+      return res.json();
+    })
     .then(data => {
+      console.log('My academy data:', data);
       setAcademy(data);
       setFields(data.fields || []);
       
       // Fetch bookings for this academy only
+      console.log('Fetching bookings for academy ID:', data.id);
       return fetch(`${API_URL}/academies/${data.id}/bookings`);
     })
-    .then(res => res.json())
+    .then(res => {
+      console.log('Bookings response status:', res.status);
+      return res.json();
+    })
     .then(data => {
+      console.log('Bookings data:', data);
       setBookings(data);
       setLoading(false);
     })
-    .catch(() => {
+    .catch((error) => {
+      console.error('Error fetching academy data:', error);
       setLoading(false);
     });
   }, [navigate]);

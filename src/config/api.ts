@@ -9,7 +9,7 @@ const getApiUrl = () => {
   }
   
   // Production fallback - you'll need to update this with your Railway URL
-  return 'https://your-railway-app-url.railway.app';
+  return 'http://localhost:4000'; // Changed from Railway URL to localhost for now
 };
 
 export const API_URL = getApiUrl(); 
