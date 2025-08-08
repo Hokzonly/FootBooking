@@ -509,14 +509,15 @@ app.post('/api/bookings', requireAuth, async (req: AuthenticatedRequest, res: Re
     }
     
     // Check email verification for regular users
-    if (user.role === 'USER' && !user.isEmailVerified) {
-      res.status(403).json({ 
-        error: 'Please verify your email before booking a field',
-        needsVerification: true,
-        email: user.email
-      });
-      return;
-    }
+    // Temporarily disabled for production deployment
+    // if (user.role === 'USER' && !user.isEmailVerified) {
+    //   res.status(403).json({ 
+    //     error: 'Please verify your email before booking a field',
+    //     needsVerification: true,
+    //     email: user.email
+    //   });
+    //   return;
+    // }
     
     // Rate limit: max 1 booking per user per day
     const today = new Date();
@@ -800,14 +801,15 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
     }
     
     // Check email verification for regular users
-    if (user.role === 'USER' && !user.isEmailVerified) {
-      res.status(403).json({ 
-        error: 'Please verify your email before logging in',
-        needsVerification: true,
-        email: user.email
-      });
-      return;
-    }
+    // Temporarily disabled for production deployment
+    // if (user.role === 'USER' && !user.isEmailVerified) {
+    //   res.status(403).json({ 
+    //     error: 'Please verify your email before logging in',
+    //     needsVerification: true,
+    //     email: user.email
+    //   });
+    //   return;
+    // }
     
     const token = jwt.sign(
       { userId: user.id, role: user.role }, 

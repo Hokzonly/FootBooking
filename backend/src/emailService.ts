@@ -85,6 +85,18 @@ class EmailService {
       return true;
     } catch (error: unknown) {
       console.error('Failed to send verification email:', error);
+      
+      // Log detailed error information
+      if (error && typeof error === 'object') {
+        console.error('Email service error details:', {
+          error: error,
+          apiKey: process.env.MAILERSEND_API_KEY ? 'Set' : 'Not set',
+          fromEmail: this.fromEmail,
+          fromName: this.fromName,
+          recipientEmail: verificationDetails.email
+        });
+      }
+      
       return false;
     }
   }
