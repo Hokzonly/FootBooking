@@ -5,7 +5,7 @@
     "buildCommand": "npm run build:backend"
   },
   "deploy": {
-    "startCommand": "cd backend && npm start",
+    "startCommand": "cd backend && npx prisma migrate deploy && npm start",
     "healthcheckPath": "/",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",

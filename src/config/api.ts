@@ -8,8 +8,8 @@ const getApiUrl = () => {
     return 'http://localhost:4000';
   }
   
-  // Production fallback - you'll need to update this with your Railway URL
-  return 'http://localhost:4000'; // Changed from Railway URL to localhost for now
+  // Production fallback - Railway URL
+  return 'https://footbooking.up.railway.app';
 };
 
 export const API_URL = getApiUrl(); 

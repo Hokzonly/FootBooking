@@ -57,6 +57,9 @@ app.use(cors({
     'https://foot-booking-esbfq20a8-hokzs-projects.vercel.app',
     'https://foot-booking-gv4nhcrs1-hokzs-projects.vercel.app',
     'https://foot-booking-p7vr4zbgk-hokzs-projects.vercel.app',
+    'https://footbooking.up.railway.app',
+    'https://footbooking-frontend.vercel.app',
+    'https://footbooking-frontend-git-main-hokzs-projects.vercel.app',
     'null', // Allow file:// URLs for testing
     '*' // Allow all origins for development
   ],
