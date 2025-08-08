@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, Calendar, Clock, MapPin, User, Phone, Mail, Download, Share2, ArrowLeft, Shield, CreditCard, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { API_URL } from '../config/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Booking {
   id: number;
@@ -15,6 +16,7 @@ interface Booking {
 }
 
 export const BookingConfirmationPage: React.FC = () => {
+  const { t } = useLanguage();
   const { bookingId } = useParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export const BookingConfirmationPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your booking details...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -57,11 +59,11 @@ export const BookingConfirmationPage: React.FC = () => {
         <div className="max-w-md mx-auto text-center">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Booking Not Found</h2>
-            <p className="text-gray-600 mb-6">The booking you're looking for doesn't exist or has been cancelled.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('error')}</h2>
+            <p className="text-gray-600 mb-6">La réservation que vous recherchez n'existe pas ou a été annulée.</p>
             <Link to="/" className="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Find Another Field
+              {t('findFields')}
             </Link>
           </div>
         </div>
@@ -71,19 +73,19 @@ export const BookingConfirmationPage: React.FC = () => {
 
   const handleDownloadTicket = () => {
     // TODO: Generate and download PDF ticket
-    alert('Ticket download feature coming soon!');
+    alert('Fonctionnalité de téléchargement de billet bientôt disponible !');
   };
 
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: 'My Football Booking',
-        text: `I've booked a field for ${format(new Date(booking.date), 'EEEE, MMMM d, yyyy')} at ${booking.time}`,
+        title: 'Ma Réservation Football',
+        text: `J'ai réservé un terrain pour le ${format(new Date(booking.date), 'EEEE, MMMM d, yyyy')} à ${booking.time}`,
         url: window.location.href
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      alert('Lien copié dans le presse-papiers !');
     }
   };
 
@@ -96,7 +98,7 @@ export const BookingConfirmationPage: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link to="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+            {t('back')} à l'{t('home')}
           </Link>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { AuthForm } from "../components/AuthForm";
 import { API_URL } from "../config/api";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async ({ email, password, setError }) => {
@@ -20,10 +22,10 @@ export default function LoginPage() {
         window.location.href = "/";
       } else if (res.status === 403 && data.needsVerification) {
         // Handle email verification requirement
-        setError(`Please verify your email before logging in. Check your inbox for ${data.email} or click "Resend Verification" below.`);
+        setError(`Veuillez vérifier votre email avant de vous connecter. Vérifiez votre boîte de réception pour ${data.email} ou cliquez sur "Renvoyer la vérification" ci-dessous.`);
         // You could add a resend verification button here
       } else {
-        setError(data.error || "Login failed");
+        setError(data.error || t('error'));
       }
     } finally {
       setLoading(false);

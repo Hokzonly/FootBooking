@@ -48,7 +48,7 @@ class EmailService {
       const emailParams = new EmailParams()
         .setFrom(sender)
         .setTo([recipient])
-        .setSubject(`🎉 Booking Confirmed - ${bookingDetails.fieldName}`)
+        .setSubject(`🎉 Réservation Confirmée - ${bookingDetails.fieldName}`)
         .setHtml(this.generateBookingEmailHTML(bookingDetails))
         .setText(this.generateBookingEmailText(bookingDetails));
 
@@ -77,7 +77,7 @@ class EmailService {
       const emailParams = new EmailParams()
         .setFrom(sender)
         .setTo([recipient])
-        .setSubject('🔐 Verify Your Email - FootBooking')
+        .setSubject('🔐 Vérifiez Votre Email - FootBooking')
         .setHtml(this.generateVerificationEmailHTML(verificationDetails, verificationUrl))
         .setText(this.generateVerificationEmailText(verificationDetails, verificationUrl));
 
@@ -101,7 +101,7 @@ class EmailService {
       const emailParams = new EmailParams()
         .setFrom(sender)
         .setTo([recipient])
-        .setSubject('🔑 Reset Your Password - FootBooking')
+        .setSubject('🔑 Réinitialisez Votre Mot de Passe - FootBooking')
         .setHtml(this.generatePasswordResetEmailHTML(resetDetails, resetUrl))
         .setText(this.generatePasswordResetEmailText(resetDetails, resetUrl));
 
@@ -135,42 +135,42 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🔐 Verify Your Email</h1>
-            <p>Welcome to FootBooking!</p>
+            <h1>🔐 Vérifiez Votre Email</h1>
+            <p>Bienvenue sur FootBooking !</p>
           </div>
           
           <div class="content">
             <div class="verification-box">
-              <h2>Hi ${verification.name}!</h2>
-              <p>Thank you for signing up with FootBooking. To complete your registration and start booking football fields, please verify your email address.</p>
+              <h2>Bonjour ${verification.name} !</h2>
+              <p>Merci de vous être inscrit sur FootBooking. Pour compléter votre inscription et commencer à réserver des terrains de football, veuillez vérifier votre adresse email.</p>
               
-              <a href="${verificationUrl}" class="button">Verify Email Address</a>
+              <a href="${verificationUrl}" class="button">Vérifier l'Adresse Email</a>
               
               <p style="margin-top: 20px; font-size: 14px; color: #666;">
-                If the button doesn't work, copy and paste this link into your browser:<br>
+                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
                 <a href="${verificationUrl}" style="color: #667eea;">${verificationUrl}</a>
               </p>
             </div>
             
             <div class="warning">
               <h3>⚠️ Important</h3>
-              <p>You must verify your email before you can book any football fields. This helps us ensure the security of our platform.</p>
+              <p>Vous devez vérifier votre email avant de pouvoir réserver des terrains de football. Cela nous aide à assurer la sécurité de notre plateforme.</p>
             </div>
             
             <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>🎯 What happens after verification?</h3>
+              <h3>🎯 Que se passe-t-il après la vérification ?</h3>
               <ul>
-                <li>You'll be able to book football fields immediately</li>
-                <li>Receive booking confirmations via email</li>
-                <li>Access your booking history</li>
-                <li>Cancel or modify your bookings</li>
+                <li>Vous pourrez réserver des terrains de football immédiatement</li>
+                <li>Recevoir des confirmations de réservation par email</li>
+                <li>Accéder à votre historique de réservations</li>
+                <li>Annuler ou modifier vos réservations</li>
               </ul>
             </div>
           </div>
           
           <div class="footer">
-            <p>Thank you for choosing FootBooking! ⚽</p>
-            <p>If you didn't create this account, please ignore this email.</p>
+            <p>Merci d'avoir choisi FootBooking ! ⚽</p>
+            <p>Si vous n'avez pas créé ce compte, veuillez ignorer cet email.</p>
           </div>
         </div>
       </body>
@@ -180,29 +180,29 @@ class EmailService {
 
   private generateVerificationEmailText(verification: EmailVerificationDetails, verificationUrl: string): string {
     return `
-🔐 VERIFY YOUR EMAIL - FOOTBOOKING
+🔐 VÉRIFIEZ VOTRE EMAIL - FOOTBOOKING
 
-Hi ${verification.name}!
+Bonjour ${verification.name} !
 
-Thank you for signing up with FootBooking. To complete your registration and start booking football fields, please verify your email address.
+Merci de vous être inscrit sur FootBooking. Pour compléter votre inscription et commencer à réserver des terrains de football, veuillez vérifier votre adresse email.
 
-VERIFY YOUR EMAIL:
+VÉRIFIEZ VOTRE EMAIL :
 ${verificationUrl}
 
-IMPORTANT:
-• You must verify your email before you can book any football fields
-• This helps us ensure the security of our platform
-• After verification, you'll be able to book fields immediately
+IMPORTANT :
+• Vous devez vérifier votre email avant de pouvoir réserver des terrains de football
+• Cela nous aide à assurer la sécurité de notre plateforme
+• Après vérification, vous pourrez réserver des terrains immédiatement
 
-WHAT HAPPENS AFTER VERIFICATION:
-• Book football fields immediately
-• Receive booking confirmations via email
-• Access your booking history
-• Cancel or modify your bookings
+QUE SE PASSE-T-IL APRÈS LA VÉRIFICATION :
+• Réserver des terrains de football immédiatement
+• Recevoir des confirmations de réservation par email
+• Accéder à votre historique de réservations
+• Annuler ou modifier vos réservations
 
-Thank you for choosing FootBooking! ⚽
+Merci d'avoir choisi FootBooking ! ⚽
 
-If you didn't create this account, please ignore this email.
+Si vous n'avez pas créé ce compte, veuillez ignorer cet email.
     `;
   }
 
@@ -233,68 +233,68 @@ If you didn't create this account, please ignore this email.
         <div class="container">
           <div class="header">
             <div class="success-icon">🎉</div>
-            <h1>Booking Confirmed!</h1>
-            <p>Your football field has been successfully reserved</p>
+            <h1>Réservation Confirmée !</h1>
+            <p>Votre terrain de football a été réservé avec succès</p>
           </div>
           
           <div class="content">
             <div class="booking-details">
-              <h2>Booking Details</h2>
+              <h2>Détails de la Réservation</h2>
               
               <div class="detail-row">
-                <span class="label">Booking ID:</span>
+                <span class="label">ID de Réservation :</span>
                 <span class="value">#${booking.bookingId}</span>
               </div>
               
               <div class="detail-row">
-                <span class="label">Field:</span>
+                <span class="label">Terrain :</span>
                 <span class="value">${booking.fieldName} #${booking.fieldId}</span>
               </div>
               
               <div class="detail-row">
-                <span class="label">Date:</span>
+                <span class="label">Date :</span>
                 <span class="value">${booking.date}</span>
               </div>
               
               <div class="detail-row">
-                <span class="label">Time:</span>
+                <span class="label">Heure :</span>
                 <span class="value">${booking.time}</span>
               </div>
               
               <div class="detail-row">
-                <span class="label">Academy:</span>
+                <span class="label">Académie :</span>
                 <span class="value">${booking.academyName}</span>
               </div>
               
               <div class="detail-row">
-                <span class="label">Customer:</span>
+                <span class="label">Client :</span>
                 <span class="value">${booking.customerName}</span>
               </div>
               
               <div class="detail-row">
-                <span class="label">Phone:</span>
+                <span class="label">Téléphone :</span>
                 <span class="value">${booking.customerPhone}</span>
               </div>
             </div>
             
             <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>📋 Important Information</h3>
+              <h3>📋 Informations Importantes</h3>
               <ul>
-                <li>Payment is done in person, not online</li>
-                <li>Please arrive 10 minutes before your booking time</li>
-                <li>Bring your booking confirmation or QR code</li>
-                <li>You can cancel anytime from your account</li>
+                <li>Le paiement se fait en personne, pas en ligne</li>
+                <li>Veuillez arriver 10 minutes avant l'heure de votre réservation</li>
+                <li>Apportez votre confirmation de réservation ou code QR</li>
+                <li>Vous pouvez annuler à tout moment depuis votre compte</li>
               </ul>
             </div>
             
             <div style="text-align: center;">
-              <a href="http://localhost:5173" class="button">Book Another Field</a>
+              <a href="http://localhost:5173" class="button">Réserver un Autre Terrain</a>
             </div>
           </div>
           
           <div class="footer">
-            <p>Thank you for choosing FootBooking! ⚽</p>
-            <p>If you have any questions, please contact our support team.</p>
+            <p>Merci d'avoir choisi FootBooking ! ⚽</p>
+            <p>Si vous avez des questions, veuillez contacter notre équipe de support.</p>
           </div>
         </div>
       </body>
@@ -304,28 +304,28 @@ If you didn't create this account, please ignore this email.
 
   private generateBookingEmailText(booking: BookingDetails): string {
     return `
-🎉 BOOKING CONFIRMED!
+🎉 RÉSERVATION CONFIRMÉE !
 
-Your football field has been successfully reserved.
+Votre terrain de football a été réservé avec succès.
 
-BOOKING DETAILS:
-- Booking ID: #${booking.bookingId}
-- Field: ${booking.fieldName} #${booking.fieldId}
-- Date: ${booking.date}
-- Time: ${booking.time}
-- Academy: ${booking.academyName}
-- Customer: ${booking.customerName}
-- Phone: ${booking.customerPhone}
+DÉTAILS DE LA RÉSERVATION :
+- ID de Réservation : #${booking.bookingId}
+- Terrain : ${booking.fieldName} #${booking.fieldId}
+- Date : ${booking.date}
+- Heure : ${booking.time}
+- Académie : ${booking.academyName}
+- Client : ${booking.customerName}
+- Téléphone : ${booking.customerPhone}
 
-IMPORTANT INFORMATION:
-• Payment is done in person, not online
-• Please arrive 10 minutes before your booking time
-• Bring your booking confirmation or QR code
-• You can cancel anytime from your account
+INFORMATIONS IMPORTANTES :
+• Le paiement se fait en personne, pas en ligne
+• Veuillez arriver 10 minutes avant l'heure de votre réservation
+• Apportez votre confirmation de réservation ou code QR
+• Vous pouvez annuler à tout moment depuis votre compte
 
-Thank you for choosing FootBooking! ⚽
+Merci d'avoir choisi FootBooking ! ⚽
 
-Book another field: http://localhost:5173
+Réserver un autre terrain : http://localhost:5173
     `;
   }
 
@@ -352,47 +352,47 @@ Book another field: http://localhost:5173
       <body>
         <div class="container">
           <div class="header">
-            <h1>🔑 Reset Your Password</h1>
-            <p>FootBooking Account Security</p>
+            <h1>🔑 Réinitialisez Votre Mot de Passe</h1>
+            <p>Sécurité du Compte FootBooking</p>
           </div>
           
           <div class="content">
             <div class="reset-box">
-              <h2>Hi ${reset.name}!</h2>
-              <p>We received a request to reset your password for your FootBooking account. Click the button below to create a new password.</p>
+              <h2>Bonjour ${reset.name} !</h2>
+              <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte FootBooking. Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe.</p>
               
-              <a href="${resetUrl}" class="button">Reset Password</a>
+              <a href="${resetUrl}" class="button">Réinitialiser le Mot de Passe</a>
               
               <p style="margin-top: 20px; font-size: 14px; color: #666;">
-                If the button doesn't work, copy and paste this link into your browser:<br>
+                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
                 <a href="${resetUrl}" style="color: #667eea;">${resetUrl}</a>
               </p>
             </div>
             
             <div class="warning">
-              <h3>⏰ Time Sensitive</h3>
-              <p>This password reset link will expire in 1 hour for security reasons. If you don't reset your password within this time, you'll need to request a new link.</p>
+              <h3>⏰ Sensible au Temps</h3>
+              <p>Ce lien de réinitialisation de mot de passe expirera dans 1 heure pour des raisons de sécurité. Si vous ne réinitialisez pas votre mot de passe dans ce délai, vous devrez demander un nouveau lien.</p>
             </div>
             
             <div class="security">
-              <h3>🔒 Security Notice</h3>
-              <p>If you didn't request this password reset, please ignore this email. Your account is secure and no action is needed.</p>
+              <h3>🔒 Avis de Sécurité</h3>
+              <p>Si vous n'avez pas demandé cette réinitialisation de mot de passe, veuillez ignorer cet email. Votre compte est sécurisé et aucune action n'est nécessaire.</p>
             </div>
             
             <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>💡 Password Tips</h3>
+              <h3>💡 Conseils pour le Mot de Passe</h3>
               <ul>
-                <li>Use a strong password with at least 8 characters</li>
-                <li>Include a mix of letters, numbers, and symbols</li>
-                <li>Don't use the same password for multiple accounts</li>
-                <li>Consider using a password manager</li>
+                <li>Utilisez un mot de passe fort avec au moins 8 caractères</li>
+                <li>Incluez un mélange de lettres, chiffres et symboles</li>
+                <li>N'utilisez pas le même mot de passe pour plusieurs comptes</li>
+                <li>Envisagez d'utiliser un gestionnaire de mots de passe</li>
               </ul>
             </div>
           </div>
           
           <div class="footer">
-            <p>Thank you for using FootBooking! ⚽</p>
-            <p>If you have any questions, please contact our support team.</p>
+            <p>Merci d'utiliser FootBooking ! ⚽</p>
+            <p>Si vous avez des questions, veuillez contacter notre équipe de support.</p>
           </div>
         </div>
       </body>
@@ -402,32 +402,32 @@ Book another field: http://localhost:5173
 
   private generatePasswordResetEmailText(reset: PasswordResetDetails, resetUrl: string): string {
     return `
-🔑 RESET YOUR PASSWORD - FOOTBOOKING
+🔑 RÉINITIALISEZ VOTRE MOT DE PASSE - FOOTBOOKING
 
-Hi ${reset.name}!
+Bonjour ${reset.name} !
 
-We received a request to reset your password for your FootBooking account. Click the link below to create a new password.
+Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte FootBooking. Cliquez sur le lien ci-dessous pour créer un nouveau mot de passe.
 
-RESET PASSWORD:
+RÉINITIALISER LE MOT DE PASSE :
 ${resetUrl}
 
-TIME SENSITIVE:
-• This password reset link will expire in 1 hour
-• If you don't reset your password within this time, you'll need to request a new link
+SENSIBLE AU TEMPS :
+• Ce lien de réinitialisation de mot de passe expirera dans 1 heure
+• Si vous ne réinitialisez pas votre mot de passe dans ce délai, vous devrez demander un nouveau lien
 
-SECURITY NOTICE:
-• If you didn't request this password reset, please ignore this email
-• Your account is secure and no action is needed
+AVIS DE SÉCURITÉ :
+• Si vous n'avez pas demandé cette réinitialisation de mot de passe, veuillez ignorer cet email
+• Votre compte est sécurisé et aucune action n'est nécessaire
 
-PASSWORD TIPS:
-• Use a strong password with at least 8 characters
-• Include a mix of letters, numbers, and symbols
-• Don't use the same password for multiple accounts
-• Consider using a password manager
+CONSEILS POUR LE MOT DE PASSE :
+• Utilisez un mot de passe fort avec au moins 8 caractères
+• Incluez un mélange de lettres, chiffres et symboles
+• N'utilisez pas le même mot de passe pour plusieurs comptes
+• Envisagez d'utiliser un gestionnaire de mots de passe
 
-Thank you for using FootBooking! ⚽
+Merci d'utiliser FootBooking ! ⚽
 
-If you have any questions, please contact our support team.
+Si vous avez des questions, veuillez contacter notre équipe de support.
     `;
   }
 }

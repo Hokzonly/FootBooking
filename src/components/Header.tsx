@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, User, Menu, X, Trophy } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const Header: React.FC = () => {
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -35,7 +37,7 @@ export const Header: React.FC = () => {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900">FootBooking</h1>
-              <p className="text-xs text-gray-500 hidden md:block">Book your next game in 3 clicks</p>
+              <p className="text-xs text-gray-500 hidden md:block">{t('bookInClicks')}</p>
             </div>
             <div className="sm:hidden">
               <h1 className="text-base sm:text-lg font-bold text-gray-900">FootBooking</h1>
@@ -56,7 +58,7 @@ export const Header: React.FC = () => {
                 className="text-gray-700 hover:text-green-600 transition-colors flex items-center text-sm xl:text-base"
               >
                 <Calendar className="h-4 w-4 xl:h-5 xl:w-5 mr-1 xl:mr-2" />
-                <span className="hidden xl:inline">Reservation</span>
+                <span className="hidden xl:inline">{t('bookings')}</span>
               </button>
             )}
             {!isAdminRoute && (
@@ -65,17 +67,17 @@ export const Header: React.FC = () => {
                 className="text-gray-700 hover:text-green-600 transition-colors flex items-center text-sm xl:text-base"
               >
                 <Trophy className="h-4 w-4 xl:h-5 xl:w-5 mr-1 xl:mr-2" />
-                <span className="hidden xl:inline">Tournoi</span>
+                <span className="hidden xl:inline">{t('tournaments')}</span>
               </Link>
             )}
             {isAdminRoute ? (
               <Link to="/" className="text-gray-700 hover:text-green-600 transition-colors text-sm xl:text-base">
-                Back to App
+                {t('back')} à l'App
               </Link>
             ) : (
               <Link to="/admin/login" className="text-gray-700 hover:text-green-600 transition-colors text-sm xl:text-base">
                 <User className="h-4 w-4 xl:h-5 xl:w-5 inline mr-1 xl:mr-2" />
-                <span className="hidden xl:inline">Admin</span>
+                <span className="hidden xl:inline">{t('admin')}</span>
               </Link>
             )}
             
@@ -83,18 +85,18 @@ export const Header: React.FC = () => {
             {isLoggedIn && userInfo && (
               <div className="text-sm xl:text-base text-gray-700 flex items-center">
                 <User className="h-4 w-4 mr-1 text-green-600" />
-                <span className="hidden xl:inline">Welcome, </span>
+                <span className="hidden xl:inline">{t('welcome')}, </span>
                 <span className="font-semibold text-green-600">{userInfo.name || userInfo.email}</span>
               </div>
             )}
             
             {!isLoggedIn ? (
               <>
-                <Link to="/login" className="px-2 py-1.5 xl:px-3 xl:py-2 rounded bg-green-600 text-white hover:bg-green-700 transition text-xs xl:text-sm">Login</Link>
-                <Link to="/register" className="px-2 py-1.5 xl:px-3 xl:py-2 rounded bg-gray-200 text-green-700 hover:bg-gray-300 transition text-xs xl:text-sm">Register</Link>
+                <Link to="/login" className="px-2 py-1.5 xl:px-3 xl:py-2 rounded bg-green-600 text-white hover:bg-green-700 transition text-xs xl:text-sm">{t('login')}</Link>
+                <Link to="/register" className="px-2 py-1.5 xl:px-3 xl:py-2 rounded bg-gray-200 text-green-700 hover:bg-gray-300 transition text-xs xl:text-sm">{t('register')}</Link>
               </>
             ) : (
-              <button onClick={handleLogout} className="px-2 py-1.5 xl:px-3 xl:py-2 rounded bg-red-500 text-white hover:bg-red-600 transition text-xs xl:text-sm">Logout</button>
+              <button onClick={handleLogout} className="px-2 py-1.5 xl:px-3 xl:py-2 rounded bg-red-500 text-white hover:bg-red-600 transition text-xs xl:text-sm">{t('logout')}</button>
             )}
           </div>
 
@@ -121,7 +123,7 @@ export const Header: React.FC = () => {
               {isLoggedIn && userInfo && (
                 <div className="px-4 py-2 text-gray-700 border-b border-gray-100">
                   <div className="text-sm">
-                    <span>Welcome, </span>
+                    <span>{t('welcome')}, </span>
                     <span className="font-semibold text-green-600">{userInfo.name || userInfo.email}</span>
                   </div>
                 </div>
@@ -140,7 +142,7 @@ export const Header: React.FC = () => {
                   className="text-gray-700 hover:text-green-600 transition-colors px-4 py-2 flex items-center text-left"
                 >
                   <Calendar className="h-5 w-5 mr-2" />
-                  Reservation
+                  {t('bookings')}
                 </button>
               )}
               {!isAdminRoute && (
@@ -150,7 +152,7 @@ export const Header: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Trophy className="h-5 w-5 mr-2" />
-                  Tournoi
+                  {t('tournaments')}
                 </Link>
               )}
               {isAdminRoute ? (
@@ -159,7 +161,7 @@ export const Header: React.FC = () => {
                   className="text-gray-700 hover:text-green-600 transition-colors px-4 py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Back to App
+                  {t('back')} à l'App
                 </Link>
               ) : (
                 <Link 
@@ -168,7 +170,7 @@ export const Header: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <User className="h-5 w-5 mr-2" />
-                  Admin
+                  {t('admin')}
                 </Link>
               )}
               {!isLoggedIn ? (

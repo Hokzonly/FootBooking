@@ -34,6 +34,9 @@ export interface Translations {
   login: string;
   register: string;
   logout: string;
+  tournaments: string;
+  admin: string;
+  welcome: string;
   
   // Home Page
   heroTitle: string;
@@ -157,6 +160,9 @@ export const translations: Record<string, Translations> = {
     login: 'Connexion',
     register: 'Inscription',
     logout: 'Déconnexion',
+    tournaments: 'Tournois',
+    admin: 'Admin',
+    welcome: 'Bienvenue',
     
     // Home Page
     heroTitle: 'FootBooking — Votre plateforme complète de réservation et communauté football',
@@ -265,6 +271,9 @@ export const translations: Record<string, Translations> = {
     login: 'Login',
     register: 'Register',
     logout: 'Logout',
+    tournaments: 'Tournaments',
+    admin: 'Admin',
+    welcome: 'Welcome',
     
     // Home Page
     heroTitle: 'FootBooking — Your All-in-One Football Booking & Community Platform',

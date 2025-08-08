@@ -11,8 +11,10 @@ import {
   ArrowRight,
   CheckCircle
 } from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export function AuthForm({ mode = "login", onSubmit, loading }) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -26,11 +28,11 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
     setError("");
     setNeedsVerification(false);
     if (mode === "register" && !name) {
-      setError("Name is required");
+      setError(t('required'));
       return;
     }
     if (!email || !password) {
-      setError("Email and password are required");
+      setError("Email et mot de passe requis");
       return;
     }
     await onSubmit({ email, password, name, setError });
@@ -38,7 +40,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
 
   const handleResendVerification = async () => {
     if (!email) {
-      setError("Please enter your email first");
+      setError("Veuillez d'abord entrer votre email");
       return;
     }
     
@@ -55,12 +57,12 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
       const data = await response.json();
 
       if (response.ok) {
-        setError("Verification email sent successfully! Please check your inbox.");
+        setError("Email de vérification envoyé avec succès ! Veuillez vérifier votre boîte de réception.");
       } else {
-        setError(data.error || 'Failed to resend verification email');
+        setError(data.error || 'Échec de l\'envoi de l\'email de vérification');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      setError('Erreur réseau. Veuillez réessayer.');
     } finally {
       setResendLoading(false);
     }
@@ -80,12 +82,12 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
             <Calendar className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            {mode === "login" ? "Welcome Back" : "Join FootBooking"}
+            {mode === "login" ? "Bon Retour" : "Rejoindre FootBooking"}
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
             {mode === "login" 
-              ? "Sign in to your account to continue booking" 
-              : "Create your account to start booking football fields"
+              ? "Connectez-vous à votre compte pour continuer à réserver" 
+              : "Créez votre compte pour commencer à réserver des terrains de football"
             }
           </p>
         </motion.div>
@@ -107,7 +109,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                   transition={{ duration: 0.4, delay: 0.2 }}
                 >
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Full Name
+                    Nom Complet
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -116,7 +118,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                      placeholder="Enter your full name"
+                      placeholder="Entrez votre nom complet"
                       autoComplete="name"
                     />
                   </div>
@@ -130,7 +132,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                 transition={{ duration: 0.4, delay: mode === "login" ? 0.2 : 0.3 }}
               >
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address
+                  Adresse Email
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -139,7 +141,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                    placeholder="Enter your email"
+                                          placeholder="Entrez votre email"
                     autoComplete="email"
                   />
                 </div>
@@ -152,7 +154,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                 transition={{ duration: 0.4, delay: mode === "login" ? 0.3 : 0.4 }}
               >
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password
+                  Mot de Passe
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -161,7 +163,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                    placeholder="Enter your password"
+                                          placeholder="Entrez votre mot de passe"
                     autoComplete={mode === "login" ? "current-password" : "new-password"}
                   />
                   <button
@@ -178,7 +180,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                       to="/forgot-password"
                       className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors"
                     >
-                      Forgot Password?
+                      Mot de passe oublié ?
                     </Link>
                   </div>
                 )}
@@ -205,7 +207,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                           disabled={resendLoading}
                           className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
                         >
-                          {resendLoading ? "Sending..." : "Resend Verification Email"}
+                          {resendLoading ? "Envoi..." : "Renvoyer l'Email de Vérification"}
                         </button>
                       )}
                     </div>
@@ -225,11 +227,11 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Processing...</span>
+                    <span>Traitement...</span>
                   </>
                 ) : (
                   <>
-                    <span>{mode === "login" ? "Sign In" : "Create Account"}</span>
+                    <span>{mode === "login" ? "Se Connecter" : "Créer un Compte"}</span>
                     <ArrowRight className="h-5 w-5" />
                   </>
                 )}
@@ -242,7 +244,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">or</span>
+                <span className="px-2 bg-white text-gray-500">ou</span>
               </div>
             </div>
 
@@ -254,12 +256,12 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
               className="text-center"
             >
               <p className="text-gray-600 text-sm">
-                {mode === "login" ? "Don't have an account?" : "Already have an account?"}
+                {mode === "login" ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?"}
                 <Link
                   to={mode === "login" ? "/register" : "/login"}
                   className="ml-1 text-green-600 hover:text-green-700 font-semibold transition-colors"
                 >
-                  {mode === "login" ? "Sign up" : "Sign in"}
+                  {mode === "login" ? "S'inscrire" : "Se connecter"}
                 </Link>
               </p>
             </motion.div>
@@ -278,22 +280,22 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Calendar className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">Easy Booking</h3>
-              <p className="text-xs text-gray-600">Book fields in just 3 clicks</p>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">Réservation Facile</h3>
+              <p className="text-xs text-gray-600">Réservez des terrains en 3 clics</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <CheckCircle className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">Instant Confirmation</h3>
-              <p className="text-xs text-gray-600">Get confirmed bookings instantly</p>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">Confirmation Instantanée</h3>
+              <p className="text-xs text-gray-600">Obtenez des réservations confirmées instantanément</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <User className="h-6 w-6 text-purple-600" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">Personal Dashboard</h3>
-              <p className="text-xs text-gray-600">Track all your bookings</p>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">Tableau de Bord Personnel</h3>
+              <p className="text-xs text-gray-600">Suivez toutes vos réservations</p>
             </div>
           </motion.div>
         )}

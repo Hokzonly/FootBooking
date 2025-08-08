@@ -6,8 +6,10 @@ import { useBookingContext } from '../contexts/BookingContext';
 import { Academy, Booking, Field } from '../types';
 import { ErrorPopup } from '../components/ErrorPopup';
 import { API_URL } from '../config/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const BookingCalendarPage: React.FC = () => {
+  const { t } = useLanguage();
   const { academyId, fieldId } = useParams<{ academyId: string; fieldId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -200,7 +202,7 @@ export const BookingCalendarPage: React.FC = () => {
 
     // Validate required fields
     if (!bookingData.firstName.trim() || !bookingData.lastName.trim() || !bookingData.phone.trim() || !bookingData.email.trim()) {
-      alert('Please fill in all required fields including email address.');
+      alert(t('fillAllFields'));
       return;
     }
 
@@ -218,7 +220,7 @@ export const BookingCalendarPage: React.FC = () => {
       });
       navigate(`/confirmation/${booking.id}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Booking failed';
+      const errorMessage = error instanceof Error ? error.message : t('bookingFailed');
       setError(errorMessage);
       setShowErrorPopup(true);
     }
@@ -228,14 +230,14 @@ export const BookingCalendarPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Book {field.type} #{academy.fields.findIndex(f => f.id === field.id) + 1}
+          {t('bookField')} {field.type} #{academy.fields.findIndex(f => f.id === field.id) + 1}
         </h1>
         <p className="text-lg text-gray-600">{academy.name}</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Select Date & Time</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{t('selectDate')} & {t('selectTime')}</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setCurrentDate(addDays(currentDate, -7))}
@@ -256,7 +258,7 @@ export const BookingCalendarPage: React.FC = () => {
               onClick={refreshBookings}
               disabled={refreshing}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-sm disabled:opacity-50"
-              title="Refresh availability"
+              title={t('search')}
             >
               {refreshing ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
@@ -268,7 +270,7 @@ export const BookingCalendarPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-8 gap-2">
-          <div className="p-3 text-center font-medium text-gray-700">Time</div>
+          <div className="p-3 text-center font-medium text-gray-700">{t('selectTime')}</div>
           {weekDays.map((day, index) => (
             <div key={index} className="p-3 text-center">
               <div className="font-medium text-gray-900">{format(day, 'EEE')}</div>
@@ -298,11 +300,11 @@ export const BookingCalendarPage: React.FC = () => {
                   >
                     {isBooked ? (
                       <div>
-                        <div className="font-medium">Booked</div>
+                        <div className="font-medium">{t('booked')}</div>
                         <div className="text-xs">{booking?.customerName}</div>
                       </div>
                     ) : (
-                      <span className="font-medium">Available</span>
+                      <span className="font-medium">{t('available')}</span>
                     )}
                   </div>
                 );
@@ -313,20 +315,20 @@ export const BookingCalendarPage: React.FC = () => {
       </div>
 
       <div className="bg-blue-50 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">Legend</h3>
+        <h3 className="font-semibold text-blue-900 mb-2">Légende</h3>
         <div className="flex flex-wrap gap-4 text-sm">
           <div className="flex items-center">
             <div className="w-4 h-4 bg-green-100 rounded mr-2"></div>
-            <span className="text-gray-700">Available</span>
+            <span className="text-gray-700">{t('available')}</span>
           </div>
           <div className="flex items-center">
             <div className="w-4 h-4 bg-red-100 rounded mr-2"></div>
-            <span className="text-gray-700">Booked</span>
+            <span className="text-gray-700">{t('booked')}</span>
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-blue-200">
           <p className="text-xs text-blue-700">
-            💡 <strong>Tip:</strong> If you've just cancelled a booking, click the refresh button (↻) to see updated availability.
+            💡 <strong>Conseil:</strong> Si vous venez d'annuler une réservation, cliquez sur le bouton de rafraîchissement (↻) pour voir la disponibilité mise à jour.
           </p>
         </div>
       </div>
@@ -334,7 +336,7 @@ export const BookingCalendarPage: React.FC = () => {
       {showBookingForm && selectedSlot && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Complete Your Booking</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">{t('confirmBooking')}</h3>
             
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="flex items-center mb-2">
@@ -351,7 +353,7 @@ export const BookingCalendarPage: React.FC = () => {
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name *
+                    {t('firstName')} *
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -362,13 +364,13 @@ export const BookingCalendarPage: React.FC = () => {
                       value={bookingData.firstName}
                       onChange={(e) => setBookingData({ ...bookingData, firstName: e.target.value })}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="First name"
+                      placeholder={t('firstName')}
                     />
                   </div>
                 </div>
                 <div className="flex-1">
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name *
+                    {t('lastName')} *
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -379,7 +381,7 @@ export const BookingCalendarPage: React.FC = () => {
                       value={bookingData.lastName}
                       onChange={(e) => setBookingData({ ...bookingData, lastName: e.target.value })}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="Last name"
+                      placeholder={t('lastName')}
                     />
                   </div>
                 </div>
@@ -387,7 +389,7 @@ export const BookingCalendarPage: React.FC = () => {
 
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number *
+                  {t('phoneNumber')} *
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -398,14 +400,14 @@ export const BookingCalendarPage: React.FC = () => {
                     value={bookingData.phone}
                     onChange={(e) => setBookingData({ ...bookingData, phone: e.target.value })}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Enter your phone number"
+                    placeholder={t('phoneNumber')}
                   />
                 </div>
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
+                  {t('emailAddress')} *
                 </label>
                 <div className="relative">
                   <svg className="absolute left-3 top-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,7 +420,7 @@ export const BookingCalendarPage: React.FC = () => {
                     value={bookingData.email}
                     onChange={(e) => setBookingData({ ...bookingData, email: e.target.value })}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Enter your email address"
+                    placeholder={t('emailAddress')}
                   />
                 </div>
               </div>
@@ -429,13 +431,13 @@ export const BookingCalendarPage: React.FC = () => {
                   onClick={() => setShowBookingForm(false)}
                   className="flex-1 py-2 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                 >
-                  Confirm Booking
+                  {t('confirmBooking')}
                 </button>
               </div>
             </form>
