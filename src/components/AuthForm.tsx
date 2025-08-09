@@ -12,6 +12,7 @@ import {
   CheckCircle
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { API_URL } from "../config/api";
 
 export function AuthForm({ mode = "login", onSubmit, loading }) {
   const { t } = useLanguage();
@@ -46,7 +47,7 @@ export function AuthForm({ mode = "login", onSubmit, loading }) {
     
     setResendLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
+      const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
